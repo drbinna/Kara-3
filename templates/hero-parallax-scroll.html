@@ -1,0 +1,145 @@
+<!-- desc: Dark cinematic hero — scroll-driven clip-path reveal of a full-screen image, floating parallax images, fade into a reveal-on-scroll schedule/list section. Zinc-950 aesthetic (SpaceX-style). Adapt: swap images, brand, list items. -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Modern Parallax Hero</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { background: #09090b; color: #fafafa; font-family: system-ui, -apple-system, sans-serif; }
+
+    /* ---------------- nav ---------------- */
+    nav {
+      position: fixed; inset: 0 0 auto 0; z-index: 50;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 24px; color: #fff;
+    }
+    .brand { font-size: 22px; font-weight: 800; letter-spacing: 2px; mix-blend-mode: difference; }
+    nav a {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 11px; letter-spacing: 1px; color: #a1a1aa; text-decoration: none;
+    }
+    nav a:hover { color: #fafafa; }
+
+    /* ---------------- hero ---------------- */
+    /* SECTION_HEIGHT (1500px) + 100vh — the scroll distance that drives the reveal */
+    .hero { position: relative; width: 100%; height: calc(1500px + 100vh); }
+
+    .center-image {
+      position: sticky; top: 0; height: 100vh; width: 100%;
+      background-image: url('https://images.unsplash.com/photo-1460186136353-977e9d6085a1?q=80&w=2670&auto=format&fit=crop');
+      background-position: center; background-repeat: no-repeat;
+      /* JS drives --c1 (25→0), --c2 (75→100), --bgsize (170%→100%), --fade (1→0) */
+      clip-path: polygon(var(--c1, 25%) var(--c1, 25%), var(--c2, 75%) var(--c1, 25%),
+                         var(--c2, 75%) var(--c2, 75%), var(--c1, 25%) var(--c2, 75%));
+      background-size: var(--bgsize, 170%);
+      opacity: var(--fade, 1);
+    }
+
+    .parallax-imgs { max-width: 1024px; margin: 0 auto; padding: 200px 16px 0; position: relative; z-index: 10; }
+    .parallax-imgs img { display: block; will-change: transform, opacity; }
+    .p-1 { width: 33%; }
+    .p-2 { width: 66%; margin: 0 auto; }
+    .p-3 { width: 33%; margin-left: auto; }
+    .p-4 { width: 42%; margin-left: 96px; }
+
+    .hero-fade {
+      position: absolute; bottom: 0; left: 0; right: 0; height: 384px;
+      background: linear-gradient(to bottom, rgba(9,9,11,0), #09090b);
+    }
+
+    /* ---------------- schedule / list section ---------------- */
+    .schedule { max-width: 1024px; margin: 0 auto; padding: 192px 16px; }
+    .schedule h1 {
+      margin-bottom: 80px; font-size: 40px; font-weight: 900;
+      text-transform: uppercase; color: #fafafa;
+    }
+    .item {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 36px; padding: 0 12px 36px; border-bottom: 1px solid #27272a;
+    }
+    .item .t { font-size: 20px; color: #fafafa; margin-bottom: 6px; }
+    .item .d, .item .loc { font-size: 13px; text-transform: uppercase; color: #71717a; }
+    .item .loc { display: flex; align-items: center; gap: 6px; }
+
+    /* reveal-on-scroll (IntersectionObserver adds .in) */
+    .reveal { opacity: 0; transform: translateY(48px); transition: opacity .75s ease-in-out, transform .75s ease-in-out; }
+    .reveal.in { opacity: 1; transform: translateY(0); }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="brand">ASTRA</div>
+    <a href="#launch-schedule">LAUNCH SCHEDULE →</a>
+  </nav>
+
+  <div class="hero">
+    <div class="center-image" id="centerImage"></div>
+    <div class="parallax-imgs">
+      <img class="p-1" data-start="-200" data-end="200"  src="https://images.unsplash.com/photo-1484600899469-230e8d1d59c0?q=80&w=2670&auto=format&fit=crop" alt="Space launch" />
+      <img class="p-2" data-start="200"  data-end="-250" src="https://images.unsplash.com/photo-1446776709462-d6b525c57bd3?q=80&w=2670&auto=format&fit=crop" alt="Space launch" />
+      <img class="p-3" data-start="-200" data-end="200"  src="https://images.unsplash.com/photo-1541185933-ef5d8ed016c2?q=80&w=2370&auto=format&fit=crop" alt="Orbiting satellite" />
+      <img class="p-4" data-start="0"    data-end="-500" src="https://images.unsplash.com/photo-1494022299300-899b96e49893?q=80&w=2670&auto=format&fit=crop" alt="Orbiting satellite" />
+    </div>
+    <div class="hero-fade"></div>
+  </div>
+
+  <section id="launch-schedule" class="schedule">
+    <h1 class="reveal">Launch Schedule</h1>
+    <div class="item reveal"><div><p class="t">NG-21</p><p class="d">Dec 9th</p></div><p class="loc">Florida ◎</p></div>
+    <div class="item reveal"><div><p class="t">Starlink</p><p class="d">Dec 20th</p></div><p class="loc">Texas ◎</p></div>
+    <div class="item reveal"><div><p class="t">Starlink</p><p class="d">Jan 13th</p></div><p class="loc">Florida ◎</p></div>
+    <div class="item reveal"><div><p class="t">Turksat 6A</p><p class="d">Feb 22nd</p></div><p class="loc">Florida ◎</p></div>
+    <div class="item reveal"><div><p class="t">NROL-186</p><p class="d">Mar 1st</p></div><p class="loc">California ◎</p></div>
+    <div class="item reveal"><div><p class="t">GOES-U</p><p class="d">Mar 8th</p></div><p class="loc">California ◎</p></div>
+    <div class="item reveal"><div><p class="t">ASTRA 1P</p><p class="d">Apr 8th</p></div><p class="loc">Texas ◎</p></div>
+  </section>
+
+  <script>
+    const SECTION_HEIGHT = 1500;
+    const lerp = (a, b, t) => a + (b - a) * Math.min(1, Math.max(0, t));
+
+    const center = document.getElementById('centerImage');
+    const pimgs = [...document.querySelectorAll('.parallax-imgs img')];
+
+    function onScroll() {
+      const y = window.scrollY;
+
+      // Center image: clip-path opens 25/75 → 0/100 over SECTION_HEIGHT,
+      // zooms 170% → 100%, then fades out over the next 500px.
+      const t = y / SECTION_HEIGHT;
+      center.style.setProperty('--c1', lerp(25, 0, t) + '%');
+      center.style.setProperty('--c2', lerp(75, 100, t) + '%');
+      center.style.setProperty('--bgsize', lerp(170, 100, y / (SECTION_HEIGHT + 500)) + '%');
+      center.style.setProperty('--fade', lerp(1, 0, (y - SECTION_HEIGHT) / 500));
+
+      // Floating images: translate from data-start → data-end as each moves
+      // through the viewport; scale/fade away near the end of their travel.
+      const vh = window.innerHeight;
+      for (const img of pimgs) {
+        const r = img.getBoundingClientRect();
+        const progress = Math.min(1, Math.max(0, (vh - r.top) / (vh + r.height)));
+        const start = Number(img.dataset.start), end = Number(img.dataset.end);
+        const ty = lerp(start, end, progress);
+        const scale = progress > 0.75 ? lerp(1, 0.85, (progress - 0.75) / 0.25) : 1;
+        img.style.transform = `translateY(${ty}px) scale(${scale})`;
+        img.style.opacity = progress > 0.75 ? lerp(1, 0, (progress - 0.75) / 0.25) : 1;
+      }
+    }
+    let ticking = false;
+    addEventListener('scroll', () => {
+      if (!ticking) { ticking = true; requestAnimationFrame(() => { onScroll(); ticking = false; }); }
+    }, { passive: true });
+    onScroll();
+
+    // Reveal-on-scroll for the schedule items.
+    const io = new IntersectionObserver(
+      (entries) => entries.forEach((e) => e.isIntersecting && e.target.classList.add('in')),
+      { threshold: 0.2 }
+    );
+    document.querySelectorAll('.reveal').forEach((el) => io.observe(el));
+  </script>
+</body>
+</html>

@@ -1,0 +1,187 @@
+<!-- desc: Dithered sphere hero (Paper Shaders "dithering/sphere" grain, exact GLSL) — huge grainy stippled sphere lit by an orbiting light, WebGL2 single file, no libs. Config block for ink/background color, grain size, dither type (random/2x2/4x4/8x8), speed. Centered headline overlay. -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sphere</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #050505; color: #fafafa; font-family: system-ui, -apple-system, sans-serif; overflow: hidden; }
+    .hero { position: relative; height: 100vh; display: flex; align-items: center; justify-content: center; }
+    #shader { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+    .copy { position: relative; z-index: 2; text-align: center; padding: 0 24px; }
+    h1 { font-size: clamp(40px, 6vw, 64px); font-weight: 700; letter-spacing: -1px; }
+    .sub { margin-top: 14px; font-size: 14px; color: #d4d4d8; opacity: .85; max-width: 420px; margin-left: auto; margin-right: auto; line-height: 1.6; }
+  </style>
+</head>
+<body>
+  <section class="hero">
+    <canvas id="shader"></canvas>
+    <div class="copy">
+      <h1>Sphere</h1>
+      <p class="sub"></p>
+    </div>
+  </section>
+
+  <script>
+    /* Grain shader — faithful port of Paper Shaders' "dithering" (sphere shape).
+     * https://github.com/paper-design/shaders (MIT) */
+    const CONFIG = {
+      colorFront: '#eb1e5e',   // the grain ink
+      colorBack:  '#050505',   // canvas behind the grain
+      pxSize: 1.5,             // grain size in px (0.5 fine .. 8 chunky)
+      type: 'random',          // 'random' | '2x2' | '4x4' | '8x8' (Bayer)
+      scale: 1.4,              // sphere size relative to viewport height (>1 crops top/bottom)
+      speed: 1,                // light orbit speed
+      intensity: 0.9,          // max brightness — <1 keeps grain texture in the lit side
+    };
+
+    const TYPES = { random: 1, '2x2': 2, '4x4': 3, '8x8': 4 };
+    const hex2rgba = (h) => {
+      const n = parseInt(h.slice(1), 16);
+      return [((n >> 16) & 255) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255, 1];
+    };
+
+    const canvas = document.getElementById('shader');
+    const gl = canvas.getContext('webgl2');
+
+    const FRAG = `#version 300 es
+precision mediump float;
+uniform float u_time;
+uniform vec2 u_resolution;
+uniform float u_pixelRatio;
+uniform float u_pxSize;
+uniform vec4 u_colorBack;
+uniform vec4 u_colorFront;
+uniform float u_type;
+uniform float u_scale;
+uniform float u_intensity;
+out vec4 fragColor;
+
+float hash21(vec2 p) {
+  p = fract(p * vec2(0.3183099, 0.3678794)) + 0.1;
+  p += dot(p, p + 19.19);
+  return fract(p.x * p.y);
+}
+
+const int bayer2x2[4] = int[4](0, 2, 3, 1);
+const int bayer4x4[16] = int[16](
+0, 8, 2, 10,
+12, 4, 14, 6,
+3, 11, 1, 9,
+15, 7, 13, 5
+);
+const int bayer8x8[64] = int[64](
+0, 32, 8, 40, 2, 34, 10, 42,
+48, 16, 56, 24, 50, 18, 58, 26,
+12, 44, 4, 36, 14, 46, 6, 38,
+60, 28, 52, 20, 62, 30, 54, 22,
+3, 35, 11, 43, 1, 33, 9, 41,
+51, 19, 59, 27, 49, 17, 57, 25,
+15, 47, 7, 39, 13, 45, 5, 37,
+63, 31, 55, 23, 61, 29, 53, 21
+);
+
+float getBayerValue(vec2 uv, int size) {
+  ivec2 pos = ivec2(fract(uv / float(size)) * float(size));
+  int index = pos.y * size + pos.x;
+  if (size == 2) return float(bayer2x2[index]) / 4.0;
+  else if (size == 4) return float(bayer4x4[index]) / 16.0;
+  else if (size == 8) return float(bayer8x8[index]) / 64.0;
+  return 0.0;
+}
+
+void main() {
+  float t = .5 * u_time;
+
+  float pxSize = u_pxSize * u_pixelRatio;
+  vec2 pxSizeUV = gl_FragCoord.xy - .5 * u_resolution;
+  pxSizeUV /= pxSize;
+  vec2 canvasPixelizedUV = (floor(pxSizeUV) + .5) * pxSize;
+
+  // sphere shape (fit: contain, centered)
+  vec2 shapeUV = canvasPixelizedUV / min(u_resolution.x, u_resolution.y);
+  shapeUV /= u_scale;
+  shapeUV *= 2.;
+
+  float d = 1. - pow(length(shapeUV), 2.);
+  vec3 pos = vec3(shapeUV, sqrt(max(0., d)));
+  vec3 lightPos = normalize(vec3(cos(1.5 * t), .8, sin(1.25 * t)));
+  float shape = .5 + .5 * dot(lightPos, pos);
+  shape *= u_intensity;   // keep grain alive in the brightest region
+  shape *= step(0., d);
+
+  int type = int(floor(u_type));
+  float dithering = 0.0;
+  switch (type) {
+    case 1: { dithering = step(hash21(canvasPixelizedUV), shape); } break;
+    case 2: dithering = getBayerValue(pxSizeUV, 2); break;
+    case 3: dithering = getBayerValue(pxSizeUV, 4); break;
+    default: dithering = getBayerValue(pxSizeUV, 8); break;
+  }
+
+  dithering -= .5;
+  float res = step(.5, shape + dithering);
+
+  vec3 fgColor = u_colorFront.rgb * u_colorFront.a;
+  float fgOpacity = u_colorFront.a;
+  vec3 bgColor = u_colorBack.rgb * u_colorBack.a;
+  float bgOpacity = u_colorBack.a;
+
+  vec3 color = fgColor * res;
+  float opacity = fgOpacity * res;
+  color += bgColor * (1. - opacity);
+  opacity += bgOpacity * (1. - opacity);
+
+  fragColor = vec4(color, opacity);
+}`;
+
+    const VERT = `#version 300 es
+void main() {
+  vec2 p = vec2[3](vec2(-1,-1), vec2(3,-1), vec2(-1,3))[gl_VertexID];
+  gl_Position = vec4(p, 0., 1.);
+}`;
+
+    function compile(type, src) {
+      const s = gl.createShader(type);
+      gl.shaderSource(s, src);
+      gl.compileShader(s);
+      if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s));
+      return s;
+    }
+    const prog = gl.createProgram();
+    gl.attachShader(prog, compile(gl.VERTEX_SHADER, VERT));
+    gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, FRAG));
+    gl.linkProgram(prog);
+    gl.useProgram(prog);
+    const U = (n) => gl.getUniformLocation(prog, n);
+
+    let DPR;
+    function resize() {
+      DPR = Math.min(2, window.devicePixelRatio || 1);
+      canvas.width = canvas.clientWidth * DPR;
+      canvas.height = canvas.clientHeight * DPR;
+      gl.viewport(0, 0, canvas.width, canvas.height);
+    }
+    resize();
+    addEventListener('resize', resize);
+
+    gl.uniform4fv(U('u_colorFront'), hex2rgba(CONFIG.colorFront));
+    gl.uniform4fv(U('u_colorBack'), hex2rgba(CONFIG.colorBack));
+    gl.uniform1f(U('u_type'), TYPES[CONFIG.type] || 1);
+    gl.uniform1f(U('u_scale'), CONFIG.scale);
+    gl.uniform1f(U('u_intensity'), CONFIG.intensity ?? 1);
+
+    function frame(now) {
+      gl.uniform1f(U('u_time'), now * 0.001 * CONFIG.speed);
+      gl.uniform2f(U('u_resolution'), canvas.width, canvas.height);
+      gl.uniform1f(U('u_pixelRatio'), DPR);
+      gl.uniform1f(U('u_pxSize'), CONFIG.pxSize);
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+      requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+  </script>
+</body>
+</html>

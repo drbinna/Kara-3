@@ -1,0 +1,707 @@
+<!-- desc: FULL studio landing page (not just a hero) — light paper background with a dithered-sphere WebGL hero (dark ink on paper), scrolling marquee strip, 3-tile hover work grid, split about section with stats, 4-card services grid, big-type footer. Swiss/brutalist type, Inter 900. Adapt: brand name, eyebrow, sub-copy, work items, stats, services, email. -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Green — Design Studio</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --ink: #0a0a0a;
+      --paper: #f0ede6;
+      --accent: #1a1a1a;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--paper);
+      color: var(--ink);
+      font-family: 'Inter', system-ui, sans-serif;
+      overflow-x: hidden;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 28px 48px;
+      mix-blend-mode: multiply;
+    }
+    .nav-logo {
+      font-size: 18px;
+      font-weight: 900;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--ink);
+    }
+    .nav-links {
+      display: flex;
+      gap: 36px;
+      list-style: none;
+    }
+    .nav-links a {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      text-decoration: none;
+      color: var(--ink);
+      opacity: 0.55;
+      transition: opacity 0.2s;
+    }
+    .nav-links a:hover { opacity: 1; }
+
+    /* ── HERO ── */
+    .hero {
+      position: relative;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    #shader {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .hero-copy {
+      position: relative;
+      z-index: 2;
+      text-align: center;
+      pointer-events: none;
+      padding: 0 24px;
+    }
+
+    .hero-eyebrow {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--ink);
+      opacity: 0.45;
+      margin-bottom: 20px;
+    }
+
+    .hero-headline {
+      font-size: clamp(96px, 18vw, 220px);
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      line-height: 0.88;
+      color: var(--ink);
+      /* rough texture via layered text-shadow */
+      text-shadow:
+        1px 1px 0 rgba(0,0,0,0.06),
+        2px 2px 0 rgba(0,0,0,0.04),
+        3px 3px 0 rgba(0,0,0,0.02);
+      mix-blend-mode: multiply;
+    }
+
+    .hero-sub {
+      margin-top: 32px;
+      font-size: 13px;
+      font-weight: 400;
+      letter-spacing: 0.06em;
+      color: var(--ink);
+      opacity: 0.5;
+      max-width: 340px;
+      margin-left: auto;
+      margin-right: auto;
+      line-height: 1.7;
+    }
+
+    .hero-cta {
+      margin-top: 44px;
+      display: inline-block;
+      pointer-events: all;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      text-decoration: none;
+      color: var(--paper);
+      background: var(--ink);
+      padding: 16px 40px;
+      border: 2px solid var(--ink);
+      transition: background 0.2s, color 0.2s;
+    }
+    .hero-cta:hover {
+      background: transparent;
+      color: var(--ink);
+    }
+
+    /* ── MARQUEE ── */
+    .marquee-strip {
+      border-top: 1.5px solid var(--ink);
+      border-bottom: 1.5px solid var(--ink);
+      overflow: hidden;
+      padding: 18px 0;
+      background: var(--ink);
+    }
+    .marquee-track {
+      display: flex;
+      gap: 0;
+      animation: marquee 18s linear infinite;
+      width: max-content;
+    }
+    .marquee-item {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      color: var(--paper);
+      padding: 0 48px;
+      white-space: nowrap;
+    }
+    .marquee-dot {
+      color: var(--paper);
+      opacity: 0.3;
+    }
+    @keyframes marquee {
+      from { transform: translateX(0); }
+      to   { transform: translateX(-50%); }
+    }
+
+    /* ── WORK ── */
+    .work {
+      padding: 120px 48px;
+    }
+    .section-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      opacity: 0.35;
+      margin-bottom: 64px;
+    }
+    .work-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2px;
+    }
+    .work-item {
+      aspect-ratio: 4/5;
+      background: var(--ink);
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+    }
+    .work-item:nth-child(2) { background: #1c1c1c; margin-top: 48px; }
+    .work-item:nth-child(3) { background: #2e2e2e; margin-top: -32px; }
+    .work-item-inner {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 28px;
+      background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 60%);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .work-item:hover .work-item-inner { opacity: 1; }
+    .work-item-title {
+      font-size: 15px;
+      font-weight: 900;
+      letter-spacing: -0.01em;
+      color: var(--paper);
+    }
+    .work-item-tag {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--paper);
+      opacity: 0.55;
+      margin-top: 6px;
+    }
+
+    /* Texture overlays on work items using CSS noise */
+    .work-item::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.08'/%3E%3C/svg%3E");
+      background-size: 200px 200px;
+      mix-blend-mode: overlay;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /* ── ABOUT ── */
+    .about {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0;
+      border-top: 1.5px solid rgba(10,10,10,0.1);
+    }
+    .about-left {
+      padding: 100px 48px;
+      border-right: 1.5px solid rgba(10,10,10,0.1);
+    }
+    .about-big {
+      font-size: clamp(48px, 7vw, 88px);
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      line-height: 1;
+      margin-top: 32px;
+    }
+    .about-right {
+      padding: 100px 48px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+    }
+    .about-body {
+      font-size: 15px;
+      line-height: 1.8;
+      opacity: 0.6;
+      max-width: 400px;
+      margin-bottom: 48px;
+    }
+    .about-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 32px;
+    }
+    .stat-num {
+      font-size: 40px;
+      font-weight: 900;
+      letter-spacing: -0.04em;
+    }
+    .stat-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      opacity: 0.4;
+      margin-top: 4px;
+    }
+
+    /* ── SERVICES ── */
+    .services {
+      padding: 100px 48px;
+      border-top: 1.5px solid rgba(10,10,10,0.1);
+    }
+    .services-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 2px;
+      margin-top: 64px;
+    }
+    .service-card {
+      padding: 40px 32px;
+      border: 1.5px solid rgba(10,10,10,0.08);
+      transition: background 0.2s, color 0.2s;
+      cursor: default;
+    }
+    .service-card:hover {
+      background: var(--ink);
+      color: var(--paper);
+    }
+    .service-num {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      opacity: 0.3;
+      margin-bottom: 40px;
+    }
+    .service-title {
+      font-size: 20px;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+      margin-bottom: 16px;
+    }
+    .service-desc {
+      font-size: 13px;
+      line-height: 1.7;
+      opacity: 0.5;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      background: var(--ink);
+      color: var(--paper);
+      padding: 80px 48px 48px;
+      display: flex;
+      flex-direction: column;
+      gap: 64px;
+    }
+    .footer-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+    .footer-logo {
+      font-size: clamp(64px, 12vw, 140px);
+      font-weight: 900;
+      letter-spacing: -0.05em;
+      line-height: 1;
+      opacity: 0.08;
+    }
+    .footer-contact {
+      text-align: right;
+    }
+    .footer-contact-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      opacity: 0.35;
+      margin-bottom: 16px;
+    }
+    .footer-contact-email {
+      font-size: clamp(18px, 2.5vw, 28px);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      text-decoration: none;
+      color: var(--paper);
+      border-bottom: 2px solid rgba(240,237,230,0.2);
+      padding-bottom: 4px;
+      transition: border-color 0.2s;
+    }
+    .footer-contact-email:hover {
+      border-color: var(--paper);
+    }
+    .footer-bottom {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid rgba(240,237,230,0.1);
+      padding-top: 32px;
+    }
+    .footer-copy {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      opacity: 0.25;
+    }
+    .footer-socials {
+      display: flex;
+      gap: 32px;
+      list-style: none;
+    }
+    .footer-socials a {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      text-decoration: none;
+      color: var(--paper);
+      opacity: 0.25;
+      transition: opacity 0.2s;
+    }
+    .footer-socials a:hover { opacity: 1; }
+
+    @media (max-width: 768px) {
+      nav { padding: 24px; }
+      .nav-links { display: none; }
+      .work-grid { grid-template-columns: 1fr; }
+      .work-item:nth-child(2),
+      .work-item:nth-child(3) { margin-top: 0; }
+      .about { grid-template-columns: 1fr; }
+      .about-left { border-right: none; border-bottom: 1.5px solid rgba(10,10,10,0.1); padding: 64px 24px; }
+      .about-right { padding: 64px 24px; }
+      .services-grid { grid-template-columns: 1fr 1fr; }
+      .work { padding: 80px 24px; }
+      .services { padding: 80px 24px; }
+      footer { padding: 60px 24px 40px; }
+      .footer-top { flex-direction: column; gap: 40px; }
+      .footer-contact { text-align: left; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <div class="nav-logo">Green</div>
+    <ul class="nav-links">
+      <li><a href="#">Work</a></li>
+      <li><a href="#">About</a></li>
+      <li><a href="#">Services</a></li>
+      <li><a href="#">Contact</a></li>
+    </ul>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <canvas id="shader"></canvas>
+    <div class="hero-copy">
+      <div class="hero-eyebrow">Design Studio — Est. 2019</div>
+      <h1 class="hero-headline">Green</h1>
+      <p class="hero-sub">We build bold visual identities and digital experiences for brands that refuse to disappear.</p>
+      <a href="#work" class="hero-cta">View Our Work</a>
+    </div>
+  </section>
+
+  <!-- MARQUEE -->
+  <div class="marquee-strip">
+    <div class="marquee-track" id="marquee">
+      <span class="marquee-item">Brand Identity</span><span class="marquee-item marquee-dot">✦</span>
+      <span class="marquee-item">Digital Design</span><span class="marquee-item marquee-dot">✦</span>
+      <span class="marquee-item">Typography</span><span class="marquee-item marquee-dot">✦</span>
+      <span class="marquee-item">Art Direction</span><span class="marquee-item marquee-dot">✦</span>
+      <span class="marquee-item">Motion</span><span class="marquee-item marquee-dot">✦</span>
+      <span class="marquee-item">Web Experience</span><span class="marquee-item marquee-dot">✦</span>
+      <span class="marquee-item">Brand Identity</span><span class="marquee-item marquee-dot">✦</span>
+      <span class="marquee-item">Digital Design</span><span class="marquee-item marquee-dot">✦</span>
+      <span class="marquee-item">Typography</span><span class="marquee-item marquee-dot">✦</span>
+      <span class="marquee-item">Art Direction</span><span class="marquee-item marquee-dot">✦</span>
+      <span class="marquee-item">Motion</span><span class="marquee-item marquee-dot">✦</span>
+      <span class="marquee-item">Web Experience</span><span class="marquee-item marquee-dot">✦</span>
+    </div>
+  </div>
+
+  <!-- WORK -->
+  <section class="work" id="work">
+    <div class="section-label">Selected Work</div>
+    <div class="work-grid">
+      <div class="work-item">
+        <div class="work-item-inner">
+          <div class="work-item-title">Monolith Records</div>
+          <div class="work-item-tag">Brand Identity</div>
+        </div>
+      </div>
+      <div class="work-item">
+        <div class="work-item-inner">
+          <div class="work-item-title">Fallow Magazine</div>
+          <div class="work-item-tag">Editorial Design</div>
+        </div>
+      </div>
+      <div class="work-item">
+        <div class="work-item-inner">
+          <div class="work-item-title">Strata Architects</div>
+          <div class="work-item-tag">Web Experience</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ABOUT -->
+  <section class="about">
+    <div class="about-left">
+      <div class="section-label">About</div>
+      <div class="about-big">Design<br>that<br>sticks.</div>
+    </div>
+    <div class="about-right">
+      <p class="about-body">Green is an independent design studio working at the intersection of identity, type, and code. We partner with ambitious brands to make work that is distinct, rigorous, and built to last.</p>
+      <div class="about-stats">
+        <div>
+          <div class="stat-num">47</div>
+          <div class="stat-label">Projects</div>
+        </div>
+        <div>
+          <div class="stat-num">06</div>
+          <div class="stat-label">Years Active</div>
+        </div>
+        <div>
+          <div class="stat-num">3</div>
+          <div class="stat-label">Continents</div>
+        </div>
+        <div>
+          <div class="stat-num">12</div>
+          <div class="stat-label">Awards</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SERVICES -->
+  <section class="services">
+    <div class="section-label">What We Do</div>
+    <div class="services-grid">
+      <div class="service-card">
+        <div class="service-num">01</div>
+        <div class="service-title">Brand Identity</div>
+        <div class="service-desc">Logos, systems, and visual language built to perform across every surface.</div>
+      </div>
+      <div class="service-card">
+        <div class="service-num">02</div>
+        <div class="service-title">Art Direction</div>
+        <div class="service-desc">Campaign concepts, photography direction, and visual strategy.</div>
+      </div>
+      <div class="service-card">
+        <div class="service-num">03</div>
+        <div class="service-title">Web & Digital</div>
+        <div class="service-desc">Websites, interfaces, and interactive experiences with real craftsmanship.</div>
+      </div>
+      <div class="service-card">
+        <div class="service-num">04</div>
+        <div class="service-title">Typography</div>
+        <div class="service-desc">Custom lettering and type systems that give brands a voice of their own.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-top">
+      <div class="footer-logo">Green</div>
+      <div class="footer-contact">
+        <div class="footer-contact-label">Let's Work Together</div>
+        <a class="footer-contact-email" href="mailto:hello@greenstudio.co">hello@greenstudio.co</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div class="footer-copy">© 2025 Green Studio. All rights reserved.</div>
+      <ul class="footer-socials">
+        <li><a href="#">Instagram</a></li>
+        <li><a href="#">Twitter</a></li>
+        <li><a href="#">LinkedIn</a></li>
+      </ul>
+    </div>
+  </footer>
+
+  <!-- SHADER SCRIPT -->
+  <script>
+    const CONFIG = {
+      colorFront: '#0a0a0a',
+      colorBack:  '#f0ede6',
+      pxSize: 2.0,
+      type: 'random',
+      scale: 1.35,
+      speed: 0.7,
+      intensity: 0.88,
+    };
+
+    const TYPES = { random: 1, '2x2': 2, '4x4': 3, '8x8': 4 };
+    const hex2rgba = (h) => {
+      const n = parseInt(h.slice(1), 16);
+      return [((n >> 16) & 255) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255, 1];
+    };
+
+    const canvas = document.getElementById('shader');
+    const gl = canvas.getContext('webgl2');
+    if (!gl) { canvas.style.display = 'none'; }
+
+    const FRAG = `#version 300 es
+precision mediump float;
+uniform float u_time;
+uniform vec2 u_resolution;
+uniform float u_pixelRatio;
+uniform float u_pxSize;
+uniform vec4 u_colorBack;
+uniform vec4 u_colorFront;
+uniform float u_type;
+uniform float u_scale;
+uniform float u_intensity;
+out vec4 fragColor;
+
+float hash21(vec2 p) {
+  p = fract(p * vec2(0.3183099, 0.3678794)) + 0.1;
+  p += dot(p, p + 19.19);
+  return fract(p.x * p.y);
+}
+const int bayer2x2[4] = int[4](0, 2, 3, 1);
+const int bayer4x4[16] = int[16](0,8,2,10,12,4,14,6,3,11,1,9,15,7,13,5);
+const int bayer8x8[64] = int[64](
+  0,32,8,40,2,34,10,42,48,16,56,24,50,18,58,26,
+  12,44,4,36,14,46,6,38,60,28,52,20,62,30,54,22,
+  3,35,11,43,1,33,9,41,51,19,59,27,49,17,57,25,
+  15,47,7,39,13,45,5,37,63,31,55,23,61,29,53,21
+);
+float getBayerValue(vec2 uv, int size) {
+  ivec2 pos = ivec2(fract(uv / float(size)) * float(size));
+  int index = pos.y * size + pos.x;
+  if (size == 2) return float(bayer2x2[index]) / 4.0;
+  else if (size == 4) return float(bayer4x4[index]) / 16.0;
+  else return float(bayer8x8[index]) / 64.0;
+}
+void main() {
+  float t = .5 * u_time;
+  float pxSize = u_pxSize * u_pixelRatio;
+  vec2 pxSizeUV = gl_FragCoord.xy - .5 * u_resolution;
+  pxSizeUV /= pxSize;
+  vec2 canvasPixelizedUV = (floor(pxSizeUV) + .5) * pxSize;
+  vec2 shapeUV = canvasPixelizedUV / min(u_resolution.x, u_resolution.y);
+  shapeUV /= u_scale;
+  shapeUV *= 2.;
+  float d = 1. - pow(length(shapeUV), 2.);
+  vec3 pos = vec3(shapeUV, sqrt(max(0., d)));
+  vec3 lightPos = normalize(vec3(cos(1.5 * t), .8, sin(1.25 * t)));
+  float shape = .5 + .5 * dot(lightPos, pos);
+  shape *= u_intensity;
+  shape *= step(0., d);
+  int type = int(floor(u_type));
+  float dithering = 0.0;
+  if (type == 1) { dithering = step(hash21(canvasPixelizedUV), shape); }
+  else if (type == 2) { dithering = getBayerValue(pxSizeUV, 2); }
+  else if (type == 3) { dithering = getBayerValue(pxSizeUV, 4); }
+  else { dithering = getBayerValue(pxSizeUV, 8); }
+  dithering -= .5;
+  float res = step(.5, shape + dithering);
+  vec3 fgColor = u_colorFront.rgb * u_colorFront.a;
+  float fgOpacity = u_colorFront.a;
+  vec3 bgColor = u_colorBack.rgb * u_colorBack.a;
+  float bgOpacity = u_colorBack.a;
+  vec3 color = fgColor * res;
+  float opacity = fgOpacity * res;
+  color += bgColor * (1. - opacity);
+  opacity += bgOpacity * (1. - opacity);
+  fragColor = vec4(color, opacity);
+}`;
+
+    const VERT = `#version 300 es
+void main() {
+  vec2 p = vec2[3](vec2(-1,-1), vec2(3,-1), vec2(-1,3))[gl_VertexID];
+  gl_Position = vec4(p, 0., 1.);
+}`;
+
+    function compile(type, src) {
+      const s = gl.createShader(type);
+      gl.shaderSource(s, src);
+      gl.compileShader(s);
+      return s;
+    }
+    const prog = gl.createProgram();
+    gl.attachShader(prog, compile(gl.VERTEX_SHADER, VERT));
+    gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, FRAG));
+    gl.linkProgram(prog);
+    gl.useProgram(prog);
+    const U = (n) => gl.getUniformLocation(prog, n);
+
+    let DPR;
+    function resize() {
+      DPR = Math.min(2, window.devicePixelRatio || 1);
+      canvas.width  = canvas.clientWidth  * DPR;
+      canvas.height = canvas.clientHeight * DPR;
+      gl.viewport(0, 0, canvas.width, canvas.height);
+    }
+    resize();
+    addEventListener('resize', resize);
+
+    gl.uniform4fv(U('u_colorFront'), hex2rgba(CONFIG.colorFront));
+    gl.uniform4fv(U('u_colorBack'),  hex2rgba(CONFIG.colorBack));
+    gl.uniform1f(U('u_type'),      TYPES[CONFIG.type] || 1);
+    gl.uniform1f(U('u_scale'),     CONFIG.scale);
+    gl.uniform1f(U('u_intensity'), CONFIG.intensity);
+
+    function frame(now) {
+      gl.uniform1f(U('u_time'),       now * 0.001 * CONFIG.speed);
+      gl.uniform2f(U('u_resolution'), canvas.width, canvas.height);
+      gl.uniform1f(U('u_pixelRatio'), DPR);
+      gl.uniform1f(U('u_pxSize'),     CONFIG.pxSize);
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+      requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+  </script>
+
+</body>
+</html>
