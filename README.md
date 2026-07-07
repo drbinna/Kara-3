@@ -1,189 +1,154 @@
-# Cara — Goblin Labs Operator
+# Kara 3 — Voice-Driven Design Partner
 
-A real-time voice operator: an Anam avatar with a Claude brain that reads the
-workspace, database, and calendar, and drives Zendesk by voice behind a spoken
-confirmation gate.
+A real-time voice demo: an [Anam](https://anam.ai) avatar with a Claude brain
+that designs websites on request. Ask her for a landing page out loud and a
+finished, polished page lands in her Files box seconds later. The front-end is
+a cinematic living portrait — a seamless video loop of Kara under a volumetric
+light beam — with her live avatar taking the stage when you start talking.
 
-**Onboarding & multi-user:** each operator connects their *own* Zendesk
-(subdomain, email, API token) in the browser; credentials are verified live
-against `/users/me`, held in server memory keyed by a per-session conversation
-id, never written to disk, and expire with the session. The confirmation gate
-is keyed the same way, so one operator's "confirm" can never fire another's
-staged change (tested). "Skip — demo tickets" runs against the built-in mocks.
+## What she does
 
-A real-time [Anam](https://anam.ai) avatar whose "brain" is the
-[Claude Agent SDK](https://platform.claude.com/docs/en/agent-sdk/overview) —
-the same agent loop, file tools, and context management that power Claude Code.
-The avatar answers from read-only sources — a workspace folder (files), a SQLite
-database (customers/orders), and a calendar (events) — and can also **write to
-Zendesk** (change a ticket's status, post a public reply), but only behind a
-spoken confirmation gate: it stages the change, reads it back, and sends it to
-Zendesk only after you say "confirm" out loud. Files, the database, and shell
-stay read-only.
+Speak a brief ("build me a website for a medspa called Velle, light and airy,
+with a treatment menu and booking") and Kara:
 
-## How it maps to the architecture
+1. matches it to the closest page in her template catalog,
+2. publishes it instantly with your brand name and copy swapped in,
+3. announces it, and the file appears in the floating **Files** box —
+   downloadable, self-contained HTML.
+
+She presents every page as designed on the spot; the catalog is her
+backstage secret.
+
+## Architecture
 
 ```
-Browser (public/)              Backend (server.js)                Agent SDK
-─────────────────              ───────────────────                ─────────
-Anam SDK renders the      →    POST /api/session-token       →    (mints token,
-avatar, does speech-to-        disables Anam's brain               brain = us)
-text and turn-taking           (llmId CUSTOMER_CLIENT_V1)
+Browser (public/)               Backend (server.js)             Brain (fast-brain.js)
+─────────────────               ───────────────────             ─────────────────────
+Anam SDK renders the avatar, →  POST /api/session-token      →  (mints token with
+does speech-to-text and         disables Anam's built-in         llmId CUSTOMER_CLIENT_V1,
+turn-taking                     brain — the brain is us          so replies come from us)
 
-User speaks →                  POST /api/chat-stream         →    query({ prompt,
-MESSAGE_HISTORY_UPDATED   →    runs the agent loop,               options }) reads
-fires with the history         streams assistant text             workspace files
-                                                                   with Read/Glob/Grep
-createTalkMessageStream() ←    newline-delimited {content}   ←    assistant text
-speaks each chunk              chunks                             blocks stream out
+User speaks →                →  POST /api/chat-stream        →  direct Anthropic Messages
+MESSAGE_HISTORY_UPDATED         streams {content} chunks        API tool loop (no
+fires with full history         + {control} lines               subprocess), streaming
+                                                                from the first token
+createTalkMessageStream()   ←   spoken text                 ←   filler line + one
+speaks chunks; control.announce                                 publish_template call
+arrives as its own talk() turn
 ```
 
-Three seams, all in `server.js`:
+Two brains, switched by env:
 
-1. **`/api/session-token`** — mints an Anam token with `llmId: 'CUSTOMER_CLIENT_V1'`,
-   which turns Anam's built-in brain off and makes us responsible for replies.
-2. **Read-only guard** — `allowedTools` auto-approves `Read`, `Glob`, `Grep`;
-   `canUseTool` hard-denies everything else, so a spoken sentence can never
-   trigger a write or a shell command.
-3. **`/api/chat-stream`** — runs `query()` and forwards each assistant **text**
-   block as a `{content}` chunk. Tool-use blocks stay silent, which naturally
-   gives you "let me check…" followed by the answer.
+- **Demo mode** (`DEMO_MODE=1`, the default) — template serving only. One tool
+  (`publish_template`), the catalog inlined into the system prompt (no
+  list/read round-trips), Haiku for a ~0.5 s first spoken token. She cannot
+  browse, research, or build from scratch — by construction, not by prompt.
+- **Full brain** (`DEMO_MODE=0`) — Sonnet with the whole toolkit: her own
+  Playwright browser, computer use, server-side web search, a background
+  deep-research agent, from-scratch page authoring, and the template library
+  she can grow herself (`save_template`).
 
-## Custom tools — answering from beyond files
+## Reliability guards (learned the hard way)
 
-The avatar reaches non-file data through **in-process MCP tools** (`mcp-tools.js`),
-which run inside this same Node process — no separate server to host. Two are wired up:
+Voice UIs re-fire events and models improvise; the demo loop is hardened in
+code, not just prompted:
 
-- **`query_database`** — runs a read-only SQL `SELECT` against a seeded SQLite
-  database (`data/app.db`: `customers` + `orders`). The connection is opened
-  `readonly: true` and the handler rejects anything but a single `SELECT`/`WITH`,
-  so a spoken sentence can't mutate data even if the model tried.
-- **`list_calendar_events`** — returns events in a date range. It reads an
-  in-memory list generated relative to today so the demo is always "live."
+- **One answer per utterance** — Anam re-fires history updates for the same
+  user message (revised transcripts, assistant text landing). A turn is only
+  accepted if the history contains *more* user messages than the last answered
+  turn (30 s echo window).
+- **Newest utterance wins** — a new request aborts any in-flight turn
+  (`AbortController` per session), so a stale turn can't keep building or
+  saving after you've moved on.
+- **Delivery ends the turn** — the moment a page is published, the turn halts;
+  the announcement ("And done, your page is ready…") is spoken deterministically
+  by the server, shipped as a `control.announce` line that the client voices as
+  its own `talk()` turn (feeding one TalkMessageStream across the tool-call gap
+  desyncs the avatar's voice).
+- **No unrequested serves** — re-publishing the same template with the same
+  swaps within 2 minutes is refused at the tool level, so a reaction like
+  "I love it" can never trigger a second delivery.
+- **Transcripts** — every exchange is appended to `transcripts/<conversation>.log`
+  (gitignored) for post-demo review.
 
-Both are defined with `tool(name, description, zodShape, handler)`, bundled with
-`createSdkMcpServer({ name: 'data', ... })`, and registered in `server.js` via
-`mcpServers: { data: dataServer }`. The agent sees them as
-`mcp__data__query_database` and `mcp__data__list_calendar_events` — those exact
-names are in `allowedTools` **and** the read-only guard's allow-set, which is what
-lets them run without a permission prompt.
+## Front-end
 
-The data access lives in `data-store.js` with **no SDK import**, so it's plain,
-testable code. Swapping in real systems is a one-file change:
+- **Living portrait hero** — `public/kara-beam-loop.mp4`, a palindrome-baked
+  seamless loop (locked camera; only the light and dust move, plus her blinks).
+  Press **Start conversation** and it cross-fades into her live avatar.
+- **Companion Mode** — a document picture-in-picture window carrying her live
+  video *and* the file list, floating above every app.
+- **Share screen** — one JPEG frame of your screen rides along with each
+  utterance, so she can react to what you see.
+- **Files box** — inline-dropdown-styled card on an iridescent foil surface
+  (both vanilla ports): header with close button, smooth contained scrolling,
+  staggered row entrances, auto-scroll to the newest artifact. Mirrored live
+  into the Companion window.
 
-- **Real database** — point `data-store.js` at Postgres/MySQL (e.g. `pg`) instead
-  of SQLite; keep the SELECT-only guard.
-- **Real calendar** — replace `listCalendarEvents` with a Google Calendar call
-  (`googleapis` → `calendar.events.list`) returning the same `{title, start, end,
-  location}` shape. That adds OAuth setup, which is why the scaffold ships with a
-  local stand-in.
+## Template library
 
+`templates/*.html` — self-contained single-file pages (styles, scripts, and
+media inlined; the research-lab template embeds its hero video as base64).
+Each starts with a `<!-- desc: ... -->` line: what it is, a hard rule to
+deliver via `publish_template` only, and the exact swappable strings
+(brand, headline, prices) quoted so the model copies them character for
+character. Drop a new file in and it's servable immediately — the catalog is
+read fresh every turn.
 
-## Write tier — Zendesk behind a spoken confirmation gate
-
-The avatar can change Zendesk tickets, but never in a single step. The write is
-split into two tools so a spoken word can't fire a mutation by accident:
-
-- **`stage_ticket_update`** (auto-approved, no external effect) — records the
-  intended `{ status, comment }` for a ticket and returns a summary to read back.
-- **`commit_ticket_update`** (the actual `PUT` to Zendesk) — deliberately **left
-  out of `allowedTools`**, so every call routes through `canUseTool`, which allows
-  it *only* when something is staged **and** the latest user utterance matched the
-  confirmation phrase (`server.js`, `CONFIRM_RE`). This is a code gate, not a
-  prompt the model could talk its way past.
-
-So the demo flow is two turns:
-
-1. "Solve ticket 4302 and reply that it's fixed." → the agent reads the ticket,
-   stages the change, and says "I'll mark #4302 solved and post '…'. Say confirm
-   and I'll send it." A **pending** banner appears. Nothing has been written.
-2. "Confirm." → the gate opens, `commit_ticket_update` runs the Zendesk `PUT`, and
-   the banner turns to **sent**. Saying "cancel" instead clears the staged change.
-
-The pending/sent banner is driven by `{control}` lines the backend interleaves
-with the spoken `{content}` chunks; the browser renders control lines instead of
-speaking them.
-
-### Live vs mock
-
-`zendesk.js` runs in **mock** mode (in-memory tickets) unless you set
-`ZENDESK_SUBDOMAIN`, `ZENDESK_EMAIL`, and `ZENDESK_API_TOKEN` — then it hits the
-real API with Basic auth (`{email}/token:{api_token}`). Mock mode means you can
-rehearse and film the whole demo offline; flip to live by adding the three env
-vars. **Use a Zendesk sandbox for the demo** — the avatar is genuinely writing.
+Ships with seven: three hero pages (particle orb, dithered sphere, SpaceX-style
+parallax), two full sites (design studio, medspa), a dark research-lab site
+with a cinematic video hero, and an interactive cosmetics product card.
 
 ## Setup
 
-Requires **Node.js 18+**. The Agent SDK bundles its Claude Code runtime, so
-there's nothing else to install.
+Requires **Node.js 18+**.
 
 ```bash
-npm install
-cp .env.example .env      # then paste your two API keys
+npm install               # postinstall pulls Chromium for the full brain's browser
+cp .env.example .env      # paste your two API keys
 npm start                 # → http://localhost:8000
 ```
 
 Get keys: Anam at https://anam.ai/api-key · Anthropic at https://console.anthropic.com
 
-Open the page, click **Start conversation**, and try:
+Open the page, press **Start conversation**, allow the mic, and try one breath
+per request, brand name included:
 
-- "Summarize the README out loud." (workspace files)
-- "How many orders shipped, and what's the total?" (database)
-- "What's on my calendar this week?" (calendar)
-- "What tickets are open?" → "Solve ticket 4302 and reply that it's fixed." →
-  "Confirm." (the two-turn Zendesk write — watch the banner go pending → sent)
-- "Edit the README for me." (it should refuse — files stay read-only)
+- "Build me a landing page for a deep tech startup called Helion, dark cosmic
+  feel with particles."
+- "Build me a complete website for a medspa called Velle Aesthetics, light and
+  airy, with a treatment menu and client reviews."
+- "Make me a product card for a beauty brand, a face serum, with a photo
+  carousel and add to cart."
+- Then: "Change the headline to 'Beyond orbit'" — she republishes the same
+  file with the swap.
 
-The sample `workspace/` folder is there so the demo works immediately. Point
-`WORKSPACE_DIR` at any real folder to use your own.
+Reactions ("wow", "I love it") get conversation, never a re-serve.
 
-## Test the brain first (no avatar, no microphone)
+## Extra brain surface (full mode)
 
-Before wiring up Anam, prove the agent + tools + gate work with just your
-Anthropic key:
+`mcp-tools.js` + `data-store.js` wire in-process MCP tools: a read-only SQL
+`SELECT` over a seeded SQLite DB (`data/app.db`) and a relative-to-today
+calendar. `research.js` runs a background deep-research agent that announces
+its finished brief through the server-sent-events push channel. Zendesk write
+tools exist in the repo (`zendesk.js`, `ticket-tools.js`, `gate.js`) but are
+**unwired** — the old spoken-confirmation ticket demo they belonged to has
+been retired from this build.
 
-```bash
-npm run test:brain
-```
+## Latency notes
 
-It spawns the server on its own port and plays four spoken turns through the real
-`/api/chat-stream` endpoint — read a ticket list, stage a write, a non-confirming
-turn (the gate must hold), then "confirm." It prints what Cara says and the banner
-state after each, and PASS/FAIL for each expectation. Runs against mock Zendesk
-unless `ZENDESK_*` is set, so it needs only `ANTHROPIC_API_KEY`. The model isn't
-perfectly deterministic; if a check flukes, re-run once. This isolates the brain,
-so if the avatar later won't talk you already know the agent side is good.
-
-## The one gotcha to expect: latency
-
-Anam is built for ~180 ms conversational latency; an agent that reads files
-takes seconds. This scaffold handles it by streaming the agent's prose as it
-reasons — so the avatar talks through the pause instead of freezing. Keep the
-system prompt nudging short, spoken replies (it's in `server.js`).
-
-## Upgrade path (in rough order)
-
-- **Harden the gate for production.** The confirmation is matched on the latest
-  utterance with a regex; for higher stakes, add a spoken read-back of a code word
-  the agent generates, require the ticket id in the confirmation, and log every
-  commit. Keep `commit_ticket_update` out of `allowedTools` so it always routes
-  through `canUseTool`.
-- **Per-conversation sessions.** `agentSessionId` and the gate state in `gate.js`
-  are single-user. Send a `conversationId` from the client and key both by it so
-  multiple users don't share a staged action.
-- **More write actions.** Reuse the stage → confirm → commit pattern for other
-  systems (refunds, calendar edits). Each mutating tool stays out of `allowedTools`
-  and gets its own gate branch in `canUseTool`.
-- **Smoother speech.** Enable partial-message streaming for token-level chunks
-  instead of per-block, if the per-block cadence feels chunky.
+Anam targets ~180 ms conversational latency; a model turn takes seconds. The
+demo brain closes the gap three ways: Haiku (halves time-to-first-token), the
+catalog-in-prompt design (a serve is exactly one tool call), and a canned
+server-side announcement (zero model time after delivery). Measured: first
+spoken token ~0.5–0.8 s, page delivered ~1.5 s. What remains is Anam's own
+speech-endpoint detection and voice startup.
 
 ## Notes on versions
 
-Both SDKs move fast. This was built against Anam's client-side custom-LLM
-pattern (`createTalkMessageStream` / `streamMessageChunk`) and
-`@anthropic-ai/claude-agent-sdk` ~0.3.x (`query()` async generator, `tool()` +
-`createSdkMcpServer()` for in-process tools, Zod schemas). The custom tools also
-pull in `better-sqlite3` (the seeded demo DB) and `zod`. The `model: 'sonnet'`
-alias avoids pinning a model version that could go stale. The Zendesk client uses
-the stable v2 Ticketing API (`PUT /tickets/{id}.json` with a `comment` object). If
-an import breaks, check each SDK's changelog first.
+Built against Anam's client-side custom-LLM pattern
+(`createTalkMessageStream` / `streamMessageChunk` / `talk`) and the Anthropic
+Messages API directly (streaming, tool use, `tool_choice`). The Claude Agent
+SDK path (`BRAIN=agent`) is still present in `server.js` but the fast brain is
+the default and the one the demo hardening applies to. If an import breaks,
+check each SDK's changelog first.
