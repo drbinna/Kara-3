@@ -25,7 +25,7 @@ backstage secret.
 ## Architecture
 
 ```
-Browser (public/)               Backend (server.js)             Brain (fast-brain.js)
+Browser (public/)               Backend (server.js)             Brain (src/fast-brain.js)
 ─────────────────               ───────────────────             ─────────────────────
 Anam SDK renders the avatar, →  POST /api/session-token      →  (mints token with
 does speech-to-text and         disables Anam's built-in         llmId CUSTOMER_CLIENT_V1,
@@ -148,11 +148,11 @@ transcripts live on the container's ephemeral disk and reset on redeploy.
 
 ## Extra brain surface (full mode)
 
-`mcp-tools.js` + `data-store.js` wire in-process MCP tools: a read-only SQL
+`src/mcp-tools.js` + `src/data-store.js` wire in-process MCP tools: a read-only SQL
 `SELECT` over a seeded SQLite DB (`data/app.db`) and a relative-to-today
-calendar. `research.js` runs a background deep-research agent that announces
+calendar. `src/research.js` runs a background deep-research agent that announces
 its finished brief through the server-sent-events push channel. Zendesk write
-tools exist in the repo (`zendesk.js`, `ticket-tools.js`, `gate.js`) but are
+tools live in `legacy/` (with the old `test-brain.mjs` gate test) and are
 **unwired** — the old spoken-confirmation ticket demo they belonged to has
 been retired from this build.
 

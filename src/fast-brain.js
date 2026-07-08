@@ -18,7 +18,7 @@ import { startResearchJob } from './research.js';
 
 /* Template library — vetted design building blocks Kara reads and adapts
  * instead of generating pages from scratch. She can grow it herself. */
-const TEMPLATES_ROOT = path.join(path.dirname(new URL(import.meta.url).pathname), 'templates');
+const TEMPLATES_ROOT = path.join(path.dirname(new URL(import.meta.url).pathname), '..', 'templates');
 const TEMPLATE_EXT = new Set(['.html', '.css', '.md', '.txt', '.tsx', '.jsx']);
 
 function safeTemplatePath(name) {
@@ -261,7 +261,11 @@ export async function executeToolCall(name, input, ctx) {
         }
         let body = await fs.readFile(safeTemplatePath(input.name), 'utf8');
         for (const r of Array.isArray(input.replacements) ? input.replacements : []) {
-          body = body.split(String(r.find ?? '')).join(String(r.replace ?? ''));
+          // Replacements are copy strings (brand names, headlines) — escape
+          // HTML so a prompt-injected <script> can never land in a page we
+          // host. The find string is matched verbatim against the template.
+          const safe = String(r.replace ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+          body = body.split(String(r.find ?? '')).join(safe);
         }
         body = body.replace(/^<!--\s*desc:[\s\S]*?-->\s*/, ''); // library metadata stays backstage
         const d = await saveDeliverable(session?.id || 'default', input.filename, body);

@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 import Database from 'better-sqlite3';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const DATA_DIR = path.join(__dirname, 'data');
+const DATA_DIR = path.join(__dirname, '..', 'data'); // repo-root data/, not src/
 const DB_PATH = path.join(DATA_DIR, 'app.db');
 
 /* This string is handed to the model so it can write correct SQL. */

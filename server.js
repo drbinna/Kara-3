@@ -3,12 +3,12 @@ import express from 'express';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { query } from '@anthropic-ai/claude-agent-sdk';
-import { dataServer, DATA_TOOL_NAMES } from './mcp-tools.js';
-import { getSession } from './sessions.js';
-import { startResearchJob } from './research.js';
-import { runFastTurn } from './fast-brain.js';
-import { warmBrowser } from './browser-tools.js';
-import { DELIVERABLES_ROOT } from './deliverables.js';
+import { dataServer, DATA_TOOL_NAMES } from './src/mcp-tools.js';
+import { getSession } from './src/sessions.js';
+import { startResearchJob } from './src/research.js';
+import { runFastTurn } from './src/fast-brain.js';
+import { warmBrowser } from './src/browser-tools.js';
+import { DELIVERABLES_ROOT } from './src/deliverables.js';
 import fsp from 'node:fs/promises';
 
 // Brain selection: 'fast' (default) = direct Messages API loop, no

@@ -9,7 +9,7 @@ import fs from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-export const DELIVERABLES_ROOT = path.join(__dirname, 'deliverables');
+export const DELIVERABLES_ROOT = path.join(__dirname, '..', 'deliverables'); // repo-root, not src/
 
 const ALLOWED_EXT = new Set(['.md', '.txt', '.html', '.csv', '.json']);
 // Big enough for template-published pages with embedded media (the research-lab
