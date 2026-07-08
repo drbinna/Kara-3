@@ -93,12 +93,13 @@
     <main class="hero">
       <video id="persona-video" autoplay playsinline></video>
       <!-- the living portrait: seamless 20s palindrome loop -->
-      <video id="poster" src="kara-beam-loop.mp4" autoplay muted loop playsinline></video>
+      <!-- big assets ride jsDelivr's edge CDN (pinned commit = immutable cache), not the app container -->
+      <video id="poster" src="https://cdn.jsdelivr.net/gh/drbinna/Kara-3@bf07205481c98609aaef27111d2c87d701b555f5/public/kara-beam-loop.mp4" autoplay muted loop playsinline></video>
 
       <div id="action-banner"></div>
 
       <aside class="side left">
-        <img class="brandmark" src="kara3-logo.png" alt="Kara 3" />
+        <img class="brandmark" src="https://cdn.jsdelivr.net/gh/drbinna/Kara-3@bf07205481c98609aaef27111d2c87d701b555f5/public/kara3-logo.png" alt="Kara 3" />
         <p>is a voice-driven design research partner, our first shot at revolutionizing effortless, on-demand design research</p>
       </aside>
 
