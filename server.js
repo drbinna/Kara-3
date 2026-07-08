@@ -81,8 +81,13 @@ app.get('/api/events', (req, res) => {
   req.on('close', () => { console.log(`[events] push channel CLOSED for ${session.id}`); clearInterval(keepAlive); if (session.push === push) session.push = null; });
 });
 
-/* Demo trigger: start a research job without voice (rehearsal/filming). */
+/* Demo trigger: start a research job without voice (rehearsal/filming).
+ * Hard-disabled in demo mode — it spins up the full Opus researcher and a
+ * browser, which is not part of the public demo surface. */
 app.post('/api/demo/research', (req, res) => {
+  if ((process.env.DEMO_MODE ?? '1') !== '0') {
+    return res.status(403).json({ error: 'disabled in demo mode' });
+  }
   const { conversationId, question } = req.body || {};
   const session = getSession(conversationId);
   const filename = startResearchJob(session, String(question || 'latest AI agent trends'));
