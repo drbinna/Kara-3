@@ -1,5 +1,8 @@
 # Kara 3 — Voice-Driven Design Partner
 
+**Live demo: [drbinna--kara-3-kara.modal.run](https://drbinna--kara-3-kara.modal.run)** —
+press *Start conversation*, allow the mic, and ask her for a website.
+
 A real-time voice demo: an [Anam](https://anam.ai) avatar with a Claude brain
 that designs websites on request. Ask her for a landing page out loud and a
 finished, polished page lands in her Files box seconds later. The front-end is
@@ -124,6 +127,24 @@ per request, brand name included:
   file with the swap.
 
 Reactions ("wow", "I love it") get conversation, never a re-serve.
+
+## Deployment (Modal)
+
+The live instance runs on [Modal](https://modal.com) as a single always-warm
+container (`modal_app.py`) — Kara keeps sessions, delivery guards, and
+published files in one process, so she scales vertically, not horizontally.
+Load-tested at 50 concurrent conversations on 2 CPU / 2 GB with flat memory.
+
+```bash
+modal secret create kara-keys --from-dotenv .env   # once
+modal deploy modal_app.py                          # → https://<workspace>--kara-3-kara.modal.run
+```
+
+Deploys run in demo mode (`DEMO_MODE=1`) with the full-brain research endpoint
+gated off. Heavy static assets (hero video, logo) are served from jsDelivr's
+CDN pinned to a commit SHA in `public/index.html` — when those assets change,
+commit first, re-pin the URLs to the new SHA, then redeploy. Deliverables and
+transcripts live on the container's ephemeral disk and reset on redeploy.
 
 ## Extra brain surface (full mode)
 
