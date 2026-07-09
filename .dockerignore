@@ -1,0 +1,10 @@
+.git
+node_modules
+transcripts
+deliverables
+__pycache__
+legacy
+modal_app.py
+.env
+.env.*
+!.env.example

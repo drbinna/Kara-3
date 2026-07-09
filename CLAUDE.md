@@ -92,12 +92,20 @@ loop is `public/kara-beam-loop.mp4` (palindrome bake:
 ## Deploy
 
 ```bash
-modal deploy modal_app.py     # replaces the container wholesale (no zombies)
+fly deploy --ha=false         # single machine — NEVER let Fly create two
 ```
-Secrets in Modal secret `kara-keys` (from .env). Container is deliberately
-single (`min/max_containers=1`) — sessions/guards/files are in-process; do NOT
-scale horizontally without externalizing state. Load-tested: 50 concurrent
-conversations, flat memory. The user ceiling is the Anam plan, not compute.
+Live at https://kara-3.fly.dev (Fly app `kara-3`, org personal, region iad).
+Secrets via `fly secrets set` (from .env). One always-warm machine
+(`auto_stop_machines = "off"`, `min_machines_running = 1` in fly.toml) —
+sessions/guards/files are in-process; do NOT scale horizontally without
+externalizing state. `transcripts/` and `deliverables/` are symlinked onto the
+Fly volume `kara_data` (see Dockerfile CMD) so they survive redeploys.
+Load-tested: 50 concurrent conversations, flat memory. The user ceiling is the
+Anam plan, not compute. The retired Modal deployment (`modal_app.py`,
+drbinna--kara-3-kara.modal.run) may still be running — tear down when ready.
+
+Auth: Clerk sign-in required on /api/session-token and /api/chat-stream
+(src/auth.js, same instance as usegoblin.xyz). REQUIRE_AUTH=0 for local dev.
 
 ## External services available in sessions
 
