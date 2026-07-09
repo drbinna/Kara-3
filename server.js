@@ -9,6 +9,7 @@ import { startResearchJob } from './src/research.js';
 import { runFastTurn } from './src/fast-brain.js';
 import { warmBrowser } from './src/browser-tools.js';
 import { DELIVERABLES_ROOT } from './src/deliverables.js';
+import { requireAuth, authRequired } from './src/auth.js';
 import fsp from 'node:fs/promises';
 
 // Brain selection: 'fast' (default) = direct Messages API loop, no
@@ -40,7 +41,7 @@ app.use(express.static(path.join(__dirname, 'public'), {
 app.use('/deliverables', express.static(DELIVERABLES_ROOT)); // Kara's authored files
 
 /* --- SEAM 1: Anam session token with the default brain OFF --- */
-app.post('/api/session-token', async (_req, res) => {
+app.post('/api/session-token', requireAuth, async (_req, res) => {
   try {
     const r = await fetch('https://api.anam.ai/v1/auth/session-token', {
       method: 'POST',
@@ -128,9 +129,10 @@ If asked to change files or run commands, say plainly that you're in read-only m
 /* --- SEAMS 2 + 3: the brain --- */
 let agentSessionId;
 
-app.post('/api/chat-stream', async (req, res) => {
+app.post('/api/chat-stream', requireAuth, async (req, res) => {
   const { messages = [], conversationId, screenFrame } = req.body;
   const session = getSession(conversationId);
+  if (req.userId) session.userId = req.userId; // ties transcripts to the applicant
   const lastUser = [...messages].reverse().find((m) => m.role === 'user');
   const prompt = lastUser?.content?.trim();
 
@@ -162,7 +164,8 @@ app.post('/api/chat-stream', async (req, res) => {
   const logTranscript = (caraText) => {
     const dir = path.join(__dirname, 'transcripts');
     const stamp = new Date().toISOString().slice(0, 19).replace('T', ' ');
-    const line = `[${stamp}] You:  ${String(prompt).replace(/\s+/g, ' ')}\n[${stamp}] Kara: ${caraText}\n\n`;
+    const who = session.userId ? `You (${session.userId})` : 'You';
+    const line = `[${stamp}] ${who}:  ${String(prompt).replace(/\s+/g, ' ')}\n[${stamp}] Kara: ${caraText}\n\n`;
     fsp.mkdir(dir, { recursive: true })
       .then(() => fsp.appendFile(path.join(dir, `${session.id}.log`), line))
       .catch(() => {});
@@ -251,5 +254,6 @@ app.listen(PORT, () => {
   console.log(`  ▸ research   ${process.env.RESEARCH_MODEL || 'claude-opus-4-7'} (background deep-research agent)`);
   console.log(`  ▸ focus      design research + website crafting (Zendesk unwired)`);
   console.log(`  ▸ workspace  ${WORKSPACE_DIR}  (read-only)`);
+  console.log(`  ▸ auth       ${authRequired ? 'Clerk sign-in REQUIRED (set REQUIRE_AUTH=0 for local dev)' : 'OFF (REQUIRE_AUTH=0)'}`);
   warmBrowser().then((ok) => console.log(ok ? '  ▸ browser    warmed (Chromium ready)\n' : '  ▸ browser    unavailable — run: npx playwright install chromium\n'));
 });

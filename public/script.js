@@ -492,6 +492,31 @@ function renderHistory(messages) {
 }
 
 // The key seam: when the user finishes speaking, ask our backend brain and
+/* ---- Clerk auth: sign in before Kara mints a session (work-trial gating).
+ * clerk.browser.js is loaded async from index.html; wait for the global,
+ * initialize once, and hand out Bearer headers for the paid endpoints.
+ * getToken() caches and auto-refreshes, so calling it per turn is cheap. ---- */
+let clerkLoading = null;
+function clerkReady() {
+  if (clerkLoading) return clerkLoading;
+  clerkLoading = (async () => {
+    while (!window.Clerk) await new Promise((r) => setTimeout(r, 50));
+    if (!window.Clerk.loaded) await window.Clerk.load();
+    return window.Clerk;
+  })();
+  return clerkLoading;
+}
+
+async function authHeaders() {
+  try {
+    const clerk = await clerkReady();
+    const token = await clerk.session?.getToken();
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  } catch {
+    return {}; // Clerk unreachable — let the server decide (REQUIRE_AUTH=0 dev)
+  }
+}
+
 // stream its reply into the avatar's mouth via createTalkMessageStream().
 async function handleUserMessage(messageHistory) {
   const last = messageHistory[messageHistory.length - 1];
@@ -507,7 +532,7 @@ async function handleUserMessage(messageHistory) {
 
     const response = await fetch('/api/chat-stream', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...(await authHeaders()) },
       body: JSON.stringify({ messages, conversationId, screenFrame: captureScreenFrame() }),
     });
     if (!response.ok) throw new Error(`brain request failed: ${response.status}`);
@@ -560,7 +585,26 @@ async function startConversation() {
     startButton.disabled = true;
     updateStatus('Connecting…', 'loading');
 
-    const response = await fetch('/api/session-token', { method: 'POST' });
+    // Signed out? Open Clerk's modal instead of dialing. After signing in the
+    // visitor clicks Start again — no auto-dial, no surprise mic prompt.
+    const clerk = await clerkReady().catch(() => null);
+    if (clerk && !clerk.user) {
+      clerk.openSignIn();
+      startButton.disabled = false;
+      updateStatus('Sign in, then press Start again', 'loading');
+      return;
+    }
+
+    const response = await fetch('/api/session-token', {
+      method: 'POST',
+      headers: await authHeaders(),
+    });
+    if (response.status === 401) {
+      clerk?.openSignIn();
+      startButton.disabled = false;
+      updateStatus('Sign in, then press Start again', 'loading');
+      return;
+    }
     if (!response.ok) throw new Error('failed to get session token');
     const { sessionToken } = await response.json();
 

@@ -125,6 +125,14 @@
       </div>
     </div>
 
-    <script type="module" src="script.js?v=22"></script>
+    <!-- Clerk auth: same instance as usegoblin.xyz, so one account works on both.
+         The publishable key is public by design (it ships in every bundle). -->
+    <script
+      async
+      crossorigin="anonymous"
+      data-clerk-publishable-key="pk_test_c2tpbGxlZC1mZWxpbmUtNDMuY2xlcmsuYWNjb3VudHMuZGV2JA"
+      src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@5/dist/clerk.browser.js"
+    ></script>
+    <script type="module" src="script.js?v=23"></script>
   </body>
 </html>
