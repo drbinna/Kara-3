@@ -216,6 +216,11 @@ const TOOLS = [
     description: "Take a screenshot of Kara's browser page and LOOK at it. Use only when the text read is not enough (layouts, charts, images).",
     input_schema: { type: 'object', properties: {}, additionalProperties: false },
   },
+  {
+    name: 'read_capture',
+    description: "Read the page the operator just CAPTURED with the Kara Capture extension — the exact page they're looking at, including private/logged-in pages your own browser can't reach. Returns its real text, a computed-style digest (fonts, colors, spacing) for faithful rebuilds, the trimmed HTML, and a screenshot. Call this whenever the operator captures a page or refers to the page on their screen / that they just sent you.",
+    input_schema: { type: 'object', properties: {}, additionalProperties: false },
+  },
 ];
 
 /* ----------------------------- tool executor ---------------------------- */
@@ -323,6 +328,20 @@ export async function executeToolCall(name, input, ctx) {
             { type: 'text', text: `Screenshot of ${shot.url}` },
           ],
         };
+      }
+      case 'read_capture': {
+        const c = session.capture;
+        if (!c) return "No page has been captured yet. Ask the operator to click the Kara Capture extension on the tab they want to show you.";
+        const digest = (c.styleDigest || [])
+          .map((d) => `${d.sel}: font ${d.font} ${d.size}/${d.weight}, color ${d.color}, bg ${d.bg}${d.radius && d.radius !== '0px' ? `, radius ${d.radius}` : ''}`)
+          .join('\n');
+        const html = c.html ? (c.html.length > 12000 ? c.html.slice(0, 12000) + '\n<!-- …trimmed… -->' : c.html) : '(no DOM — likely a canvas app; use the screenshot)';
+        const textPart =
+          `CAPTURED PAGE: ${c.title}\nURL: ${c.url}\n\n--- STYLE DIGEST (rebuild to match) ---\n${digest || '(none)'}\n\n--- TEXT ---\n${(c.text || '').slice(0, 5000)}\n\n--- HTML ---\n${html}`;
+        const blocks = [];
+        if (c.screenshot) blocks.push({ type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: c.screenshot } });
+        blocks.push({ type: 'text', text: textPart });
+        return { blocks };
       }
       default:
         return `Error: unknown tool "${name}".`;
@@ -495,6 +514,14 @@ file contents aloud; give a one- or two-sentence summary plus that announcement.
 You also have your OWN browser (browser_open, browser_read, browser_click, browser_type). Prefer
 reading page text — it is fast; take browser_screenshot only when layout or images matter. Narrate
 briefly while you browse. Never enter passwords or log into accounts in your browser.
+
+The operator can also CAPTURE a page for you with the Kara Capture browser extension — it hands you
+the exact page they're looking at, including private or logged-in pages your own browser can't open.
+When they capture a page, or mention "the page I sent / captured / on my screen", call read_capture:
+it gives you the real text, a style digest (fonts, colors, spacing) to rebuild the look faithfully,
+the HTML, and a screenshot. This is far richer than the single share-screen frame, so prefer it for
+anything design-related. If read_capture says nothing is captured yet, tell them to click the Kara
+Capture extension on the tab they want to show you.
 
 You can also USE the computer directly (the "computer" tool): it sees your browser screen as pixels
 (1280x720) and clicks, types, scrolls and drags at exact coordinates, returning a screenshot after

@@ -1,0 +1,20 @@
+{
+  "manifest_version": 3,
+  "name": "Kara Capture",
+  "version": "1.0.0",
+  "description": "Capture the page you're looking at and hand it to Kara — real DOM, computed styles, and a screenshot, not just a picture.",
+  "permissions": ["activeTab", "scripting", "storage"],
+  "host_permissions": ["https://kara.usegoblin.xyz/*"],
+  "action": {
+    "default_title": "Send this page to Kara",
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://kara.usegoblin.xyz/*"],
+      "js": ["content-kara.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "background": { "service_worker": "background.js" }
+}

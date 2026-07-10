@@ -91,6 +91,8 @@ function subscribeEvents() {
         anamClient?.talk(ev.text);            // Kara speaks first
       } else if (ev.type === 'deliverable' && ev.file) {
         addDeliverable(ev.file);              // research brief lands as a chip
+      } else if (ev.type === 'capture') {
+        updateStatus(`Got the page: ${ev.title || ev.url}. Ask Kara about it.`, 'connected');
       }
     } catch { /* ignore malformed */ }
   };
@@ -545,6 +547,28 @@ async function authHeaders() {
   }
 }
 
+/* Kara Capture extension pairing. The extension can't read this page's JS
+ * directly, so we announce {conversationId, captureKey} via postMessage (its
+ * content script listens) and register the key server-side so only captures
+ * from this signed-in session are accepted. */
+const captureKey = crypto.randomUUID();
+function announcePairing() {
+  window.postMessage({ __kara_pair__: { conversationId, captureKey } }, window.location.origin);
+}
+window.addEventListener('message', (e) => {
+  if (e.source === window && e.data && e.data.__kara_pair_request__) announcePairing();
+});
+async function registerCapturePairing() {
+  try {
+    await fetch('/api/capture/pair', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...(await authHeaders()) },
+      body: JSON.stringify({ conversationId, captureKey }),
+    });
+    announcePairing(); // in case the extension's content script is already live
+  } catch { /* extension optional — capture just won't be paired */ }
+}
+
 // stream its reply into the avatar's mouth via createTalkMessageStream().
 async function handleUserMessage(messageHistory) {
   const last = messageHistory[messageHistory.length - 1];
@@ -643,6 +667,8 @@ async function startConversation() {
     }
     if (!response.ok) throw new Error('failed to get session token');
     const { sessionToken } = await response.json();
+
+    registerCapturePairing(); // pair the Kara Capture extension to this session
 
     anamClient = createClient(sessionToken);
 

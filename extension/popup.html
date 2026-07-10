@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+  body{width:280px;margin:0;font-family:system-ui,-apple-system,'Segoe UI',sans-serif;background:#0a0a0a;color:#f0efe9}
+  .wrap{padding:20px}
+  .brand{font-size:13px;letter-spacing:.18em;text-transform:uppercase;color:#22A03A;font-weight:700}
+  h1{font-size:17px;margin:8px 0 4px;letter-spacing:-.01em}
+  p{font-size:12.5px;color:rgba(255,255,255,.55);line-height:1.5;margin:0 0 16px}
+  button{width:100%;background:#22A03A;color:#000;border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit}
+  button:disabled{opacity:.5;cursor:default}
+  .status{margin-top:14px;font-size:12.5px;line-height:1.5;min-height:18px}
+  .ok{color:#22A03A}
+  .err{color:#e08585}
+  .muted{color:rgba(255,255,255,.4)}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="brand">Kara Capture</div>
+    <h1>Send this page to Kara</h1>
+    <p>She'll read the real structure and styles of the tab you're on, then work from that instead of a blurry screenshot.</p>
+    <button id="cap">Capture this page</button>
+    <div class="status muted" id="status">Checking connection…</div>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>

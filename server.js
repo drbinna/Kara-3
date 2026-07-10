@@ -41,6 +41,51 @@ app.use(express.static(path.join(__dirname, 'public'), {
 }));
 app.use('/deliverables', express.static(DELIVERABLES_ROOT)); // Kara's authored files
 
+/* ------------------------------------------------------------------ *
+ * CAPTURE — the Kara Capture Chrome extension hands us the page the
+ * operator is looking at (real DOM + style digest + screenshot), keyed to
+ * their conversation. Cross-origin from chrome-extension://, so CORS + a
+ * per-session captureKey (registered by the signed-in page) is the auth.
+ * ------------------------------------------------------------------ */
+const captureCors = (_req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  next();
+};
+app.options('/api/capture', captureCors, (_req, res) => res.sendStatus(204));
+
+// The signed-in Kara page registers its conversation's capture key here, so a
+// stray extension can't inject captures into someone else's session.
+app.post('/api/capture/pair', requireAuth, (req, res) => {
+  const { conversationId, captureKey } = req.body || {};
+  if (!conversationId || !captureKey) return res.status(400).json({ error: 'missing_fields' });
+  const session = getSession(conversationId);
+  session.captureKey = String(captureKey);
+  if (req.userId) session.userId = req.userId;
+  res.json({ ok: true });
+});
+
+app.post('/api/capture', captureCors, (req, res) => {
+  const { conversationId, captureKey, url, title, text, html, styleDigest, screenshot } = req.body || {};
+  if (!conversationId || !captureKey) return res.status(400).json({ error: 'missing_fields' });
+  const session = getSession(conversationId);
+  if (!session.captureKey || session.captureKey !== String(captureKey)) {
+    return res.status(403).json({ error: 'bad_capture_key' });
+  }
+  session.capture = {
+    url: String(url || ''), title: String(title || ''),
+    text: String(text || ''), html: String(html || ''),
+    styleDigest: Array.isArray(styleDigest) ? styleDigest : [],
+    screenshot: typeof screenshot === 'string' ? screenshot : '',
+    at: Date.now(),
+  };
+  // Nudge the client (and thus Kara) that a page just arrived.
+  session.push?.({ type: 'capture', url: session.capture.url, title: session.capture.title });
+  console.log(`[capture] ${session.id} <- ${session.capture.title || session.capture.url}`);
+  res.json({ ok: true });
+});
+
 /* --- SEAM 1: Anam session token with the default brain OFF --- */
 app.post('/api/session-token', requireAuth, async (_req, res) => {
   try {
