@@ -3,7 +3,7 @@
 // Verification is stateless: Clerk's public JWKS, no secret key needed.
 import { createRemoteJWKSet, jwtVerify } from 'jose';
 
-const ISSUER = process.env.CLERK_ISSUER || 'https://skilled-feline-43.clerk.accounts.dev';
+const ISSUER = process.env.CLERK_ISSUER || 'https://clerk.usegoblin.xyz';
 // Default ON: the whole point is gating who builds with Kara. REQUIRE_AUTH=0
 // is the local-dev escape hatch (curl tests, rehearsals without a browser).
 const REQUIRED = (process.env.REQUIRE_AUTH ?? '1') !== '0';
