@@ -1,0 +1,50 @@
+<!-- desc: Minimal personal portfolio: name-as-masthead, one-line bio, selected work list with text cards (no images needed), contact links. Warm off-white, serif headings. Swappable strings: name "June Okafor", role line "Product designer building calm software.", location "Brooklyn, NY", work items "Ledger — a gentler budgeting app" / "Field Notes — research tooling for small teams" / "Quiet Mode — a focus companion for macOS", email "hello@juneokafor.com". -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>June Okafor</title>
+<style>
+  :root{--paper:#faf7f2;--ink:#1c1a17;--mut:#8a8378;--line:#e6e0d6}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--paper);color:var(--ink);font-family:system-ui,-apple-system,'Segoe UI',sans-serif;line-height:1.65}
+  .wrap{max-width:680px;margin:0 auto;padding:72px 24px}
+  h1{font-family:Georgia,'Times New Roman',serif;font-size:clamp(2.4rem,7vw,3.6rem);letter-spacing:-.02em;line-height:1.05}
+  .role{font-size:18px;color:var(--mut);margin:16px 0 6px}
+  .loc{font-size:13px;letter-spacing:.18em;text-transform:uppercase;color:var(--mut)}
+  .rule{border:none;border-top:1px solid var(--line);margin:44px 0}
+  .label{font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--mut);margin-bottom:20px}
+  .work a{display:block;text-decoration:none;color:inherit;padding:22px 0;border-bottom:1px solid var(--line)}
+  .work a:first-of-type{border-top:1px solid var(--line)}
+  .work h3{font-family:Georgia,serif;font-size:22px;font-weight:500;letter-spacing:-.01em}
+  .work p{color:var(--mut);font-size:15px;margin-top:4px}
+  .work a:hover h3{text-decoration:underline;text-underline-offset:4px}
+  .contact{margin-top:44px}
+  .contact a{color:var(--ink);font-size:15px;margin-right:22px}
+  footer{margin-top:70px;color:var(--mut);font-size:12.5px}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>June Okafor</h1>
+      <p class="role">Product designer building calm software.</p>
+      <p class="loc">Brooklyn, NY</p>
+    </header>
+    <hr class="rule"/>
+    <section class="work">
+      <div class="label">Selected work</div>
+      <a href="#"><h3>Ledger — a gentler budgeting app</h3><p>Design lead, zero to launch. Money software that doesn't shout at you.</p></a>
+      <a href="#"><h3>Field Notes — research tooling for small teams</h3><p>Turned scattered interview notes into a shared, searchable memory.</p></a>
+      <a href="#"><h3>Quiet Mode — a focus companion for macOS</h3><p>A menubar app that guards your attention without gamifying it.</p></a>
+    </section>
+    <section class="contact">
+      <div class="label">Contact</div>
+      <a href="mailto:hello@juneokafor.com">hello@juneokafor.com</a>
+      <a href="#">LinkedIn</a>
+      <a href="#">Writing</a>
+    </section>
+    <footer>Open to select collaborations.</footer>
+  </div>
+</body>
+</html>

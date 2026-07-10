@@ -1,0 +1,59 @@
+<!-- desc: Clean SaaS / software product landing page: nav, hero with headline + CTA, three feature cards, simple pricing pair, footer. Light theme, indigo accent. Swappable strings: brand "Acme Flow", eyebrow "WORKFLOW AUTOMATION", headline "Ship work, not busywork", subhead "Acme Flow turns your team's repetitive tasks into automations that run themselves.", cta "Start free", feature titles "Build in minutes" / "Runs while you sleep" / "Plays well with others", plan names "Starter" / "Team", prices "$0" / "$29". -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Acme Flow</title>
+<style>
+  :root{--ink:#111827;--mut:#6b7280;--acc:#4f46e5;--bg:#ffffff;--soft:#f4f4f8}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;color:var(--ink);background:var(--bg);line-height:1.6}
+  .wrap{max-width:1040px;margin:0 auto;padding:0 24px}
+  nav{display:flex;justify-content:space-between;align-items:center;padding:22px 0}
+  .logo{font-weight:800;font-size:18px;letter-spacing:-.02em}
+  .logo span{color:var(--acc)}
+  nav a.cta{background:var(--acc);color:#fff;text-decoration:none;padding:9px 18px;border-radius:8px;font-size:14px;font-weight:600}
+  .hero{text-align:center;padding:84px 0 64px}
+  .eyebrow{font-size:12px;letter-spacing:.22em;color:var(--acc);font-weight:700}
+  h1{font-size:clamp(2.2rem,5.5vw,3.6rem);letter-spacing:-.03em;line-height:1.08;margin:18px 0}
+  .sub{max-width:540px;margin:0 auto 32px;color:var(--mut);font-size:17px}
+  .btn{display:inline-block;background:var(--acc);color:#fff;text-decoration:none;padding:14px 32px;border-radius:10px;font-weight:700;font-size:15px}
+  .btn.ghost{background:var(--soft);color:var(--ink);margin-left:10px}
+  .features{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px;padding:40px 0 64px}
+  .card{background:var(--soft);border-radius:14px;padding:26px}
+  .card .dot{width:34px;height:34px;border-radius:9px;background:var(--acc);opacity:.9;margin-bottom:14px}
+  .card h3{font-size:17px;margin-bottom:6px;letter-spacing:-.01em}
+  .card p{color:var(--mut);font-size:14.5px}
+  .pricing{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px;padding-bottom:80px;max-width:640px;margin:0 auto}
+  .plan{border:1px solid #e5e7eb;border-radius:14px;padding:28px;text-align:center}
+  .plan.hot{border-color:var(--acc);box-shadow:0 12px 40px rgba(79,70,229,.12)}
+  .plan .name{font-weight:700;font-size:15px}
+  .plan .price{font-size:2.4rem;font-weight:800;letter-spacing:-.03em;margin:10px 0 2px}
+  .plan .per{color:var(--mut);font-size:13px;margin-bottom:18px}
+  .plan ul{list-style:none;color:var(--mut);font-size:14px;margin-bottom:22px}
+  .plan li{padding:4px 0}
+  footer{border-top:1px solid #eee;color:var(--mut);font-size:13px;text-align:center;padding:28px 0}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <nav><div class="logo">Acme <span>Flow</span></div><a class="cta" href="#pricing">Start free</a></nav>
+    <section class="hero">
+      <div class="eyebrow">WORKFLOW AUTOMATION</div>
+      <h1>Ship work, not busywork</h1>
+      <p class="sub">Acme Flow turns your team's repetitive tasks into automations that run themselves.</p>
+      <a class="btn" href="#pricing">Start free</a><a class="btn ghost" href="#features">See how it works</a>
+    </section>
+    <section class="features" id="features">
+      <div class="card"><div class="dot"></div><h3>Build in minutes</h3><p>Describe the workflow in plain language and watch it assemble itself, no drag-and-drop maze.</p></div>
+      <div class="card"><div class="dot" style="opacity:.7"></div><h3>Runs while you sleep</h3><p>Schedules, triggers, and retries are handled for you, with a clean log of everything that ran.</p></div>
+      <div class="card"><div class="dot" style="opacity:.5"></div><h3>Plays well with others</h3><p>Connects to the tools your team already lives in, from inboxes to spreadsheets to CRMs.</p></div>
+    </section>
+    <section class="pricing" id="pricing">
+      <div class="plan"><div class="name">Starter</div><div class="price">$0</div><div class="per">forever</div><ul><li>3 active workflows</li><li>100 runs a month</li><li>Community support</li></ul><a class="btn ghost" href="#">Get started</a></div>
+      <div class="plan hot"><div class="name">Team</div><div class="price">$29</div><div class="per">per seat, monthly</div><ul><li>Unlimited workflows</li><li>10,000 runs a month</li><li>Priority support</li></ul><a class="btn" href="#">Start free trial</a></div>
+    </section>
+    <footer>© Acme Flow. All rights reserved.</footer>
+  </div>
+</body>
+</html>

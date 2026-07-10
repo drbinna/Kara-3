@@ -1,0 +1,54 @@
+<!-- desc: Type-driven editorial / magazine front page: big masthead, dated issue line, lead story with drop cap, three-story index, subscribe strip. Black on cream, no images required. Swappable strings: masthead "The Margin", issue line "Issue 014 — Thursday Edition", lead kicker "THE LONG READ", lead headline "What we lost when everything got fast", lead standfirst "An essay on speed, attention, and the case for taking the scenic route.", story titles "The quiet craft of maintenance" / "Notes from a smaller internet" / "In praise of the unfinished", subscribe line "One considered essay, every Thursday.". -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Margin</title>
+<style>
+  :root{--cream:#f7f3ea;--ink:#141310;--mut:#6f6a5e;--line:#d9d2c2}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--cream);color:var(--ink);font-family:Georgia,'Times New Roman',serif;line-height:1.6}
+  .wrap{max-width:820px;margin:0 auto;padding:56px 24px}
+  .masthead{text-align:center;border-bottom:3px double var(--ink);padding-bottom:22px}
+  .masthead h1{font-size:clamp(3rem,10vw,5.4rem);letter-spacing:-.02em;font-weight:700}
+  .issue{font-family:system-ui,sans-serif;font-size:11.5px;letter-spacing:.28em;text-transform:uppercase;color:var(--mut);margin-top:10px}
+  .lead{padding:48px 0 40px;border-bottom:1px solid var(--line)}
+  .kicker{font-family:system-ui,sans-serif;font-size:11.5px;letter-spacing:.26em;color:var(--ink);font-weight:700}
+  .lead h2{font-size:clamp(1.9rem,5vw,3rem);line-height:1.12;letter-spacing:-.015em;margin:14px 0}
+  .standfirst{font-size:19px;font-style:italic;color:var(--mut);max-width:560px}
+  .lead .body{margin-top:26px;font-size:17px;max-width:640px}
+  .lead .body::first-letter{font-size:3.4em;float:left;line-height:.85;padding-right:10px;font-weight:700}
+  .index{padding:36px 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:28px;border-bottom:1px solid var(--line)}
+  .index a{text-decoration:none;color:inherit}
+  .index .n{font-family:system-ui,sans-serif;font-size:11px;letter-spacing:.2em;color:var(--mut)}
+  .index h3{font-size:19px;line-height:1.25;margin-top:8px;letter-spacing:-.01em}
+  .index a:hover h3{text-decoration:underline;text-underline-offset:4px}
+  .subscribe{text-align:center;padding:42px 0 8px}
+  .subscribe p{font-style:italic;color:var(--mut);margin-bottom:16px}
+  .subscribe a{font-family:system-ui,sans-serif;display:inline-block;background:var(--ink);color:var(--cream);text-decoration:none;font-size:13.5px;font-weight:600;letter-spacing:.06em;padding:12px 30px;border-radius:2px}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="masthead">
+      <h1>The Margin</h1>
+      <div class="issue">Issue 014 — Thursday Edition</div>
+    </header>
+    <article class="lead">
+      <div class="kicker">THE LONG READ</div>
+      <h2>What we lost when everything got fast</h2>
+      <p class="standfirst">An essay on speed, attention, and the case for taking the scenic route.</p>
+      <p class="body">Somewhere between the overnight delivery and the instant answer, we stopped noticing the seams. Speed became the default setting of everything, and the things that refused to hurry started to look like defects rather than choices. This essay is about those things, and the people who still make them.</p>
+    </article>
+    <section class="index">
+      <a href="#"><div class="n">02</div><h3>The quiet craft of maintenance</h3></a>
+      <a href="#"><div class="n">03</div><h3>Notes from a smaller internet</h3></a>
+      <a href="#"><div class="n">04</div><h3>In praise of the unfinished</h3></a>
+    </section>
+    <section class="subscribe">
+      <p>One considered essay, every Thursday.</p>
+      <a href="#">Subscribe</a>
+    </section>
+  </div>
+</body>
+</html>

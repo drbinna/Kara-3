@@ -1,0 +1,62 @@
+<!-- desc: Warm one-pager for a local service business (barber, cafe, repair shop, studio): hero with name + tagline, services list with prices, hours table, visit/contact block with mailto button. Works with zero photos. Swappable strings: name "Harbor & Main", tagline "A neighborhood barbershop, the old way.", services "Classic cut — $35" / "Hot towel shave — $30" / "Beard trim — $18", hours "Tue–Fri 9am–7pm" / "Sat 8am–5pm" / "Sun–Mon closed", address "412 Harbor Street", cta email "hello@harborandmain.com". -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Harbor & Main</title>
+<style>
+  :root{--bg:#fbf8f3;--ink:#25211c;--acc:#a05c2b;--mut:#8c8478;--line:#e8e1d5}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,'Segoe UI',sans-serif;line-height:1.65}
+  .wrap{max-width:720px;margin:0 auto;padding:64px 24px}
+  .hero{text-align:center;padding-bottom:44px;border-bottom:1px solid var(--line)}
+  .hero .mark{font-size:12px;letter-spacing:.3em;text-transform:uppercase;color:var(--acc);font-weight:700}
+  h1{font-family:Georgia,serif;font-size:clamp(2.4rem,7vw,3.8rem);letter-spacing:-.02em;margin:14px 0 10px}
+  .tag{font-size:17px;color:var(--mut);font-style:italic}
+  section{padding:40px 0;border-bottom:1px solid var(--line)}
+  h2{font-size:13px;letter-spacing:.24em;text-transform:uppercase;color:var(--acc);margin-bottom:20px}
+  .svc{display:flex;justify-content:space-between;align-items:baseline;padding:12px 0;border-bottom:1px dashed var(--line);font-size:16.5px}
+  .svc:last-child{border-bottom:none}
+  .svc .price{font-family:Georgia,serif;font-weight:700}
+  .hours{width:100%;font-size:16px}
+  .hours td{padding:9px 0;border-bottom:1px dashed var(--line)}
+  .hours td:last-child{text-align:right;color:var(--mut)}
+  .hours tr:last-child td{border-bottom:none}
+  .visit{text-align:center;border-bottom:none}
+  .addr{font-family:Georgia,serif;font-size:22px;margin-bottom:6px}
+  .note{color:var(--mut);font-size:14.5px;margin-bottom:24px}
+  .btn{display:inline-block;background:var(--acc);color:#fff;text-decoration:none;padding:13px 32px;border-radius:8px;font-weight:600;font-size:15px}
+  footer{text-align:center;color:var(--mut);font-size:12.5px;padding-top:34px}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="hero">
+      <div class="mark">EST. IN THE NEIGHBORHOOD</div>
+      <h1>Harbor &amp; Main</h1>
+      <p class="tag">A neighborhood barbershop, the old way.</p>
+    </header>
+    <section>
+      <h2>Services</h2>
+      <div class="svc"><span>Classic cut</span><span class="price">$35</span></div>
+      <div class="svc"><span>Hot towel shave</span><span class="price">$30</span></div>
+      <div class="svc"><span>Beard trim</span><span class="price">$18</span></div>
+    </section>
+    <section>
+      <h2>Hours</h2>
+      <table class="hours">
+        <tr><td>Tue–Fri</td><td>9am–7pm</td></tr>
+        <tr><td>Sat</td><td>8am–5pm</td></tr>
+        <tr><td>Sun–Mon</td><td>closed</td></tr>
+      </table>
+    </section>
+    <section class="visit">
+      <h2>Visit</h2>
+      <div class="addr">412 Harbor Street</div>
+      <p class="note">Walk-ins welcome. Appointments answered same day.</p>
+      <a class="btn" href="mailto:hello@harborandmain.com">Book a chair</a>
+    </section>
+    <footer>Harbor &amp; Main — cash, card, and good conversation accepted.</footer>
+  </div>
+</body>
+</html>

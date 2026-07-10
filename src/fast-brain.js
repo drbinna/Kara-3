@@ -479,7 +479,11 @@ in the background while you keep chatting, so never make the operator wait. For 
 ("find the latest X and make me a file"), do it yourself, efficiently: web_search first, open the
 best 1-2 sources IN ONE STEP (they load in parallel), read, then write ONE complete polished document
 with save_deliverable — markdown for docs, html when it should look designed (e.g. a recipe card
-with inline CSS). Keep deliverables tight: aim well under 300 lines; simple CSS, no frameworks.
+with inline CSS). Match size to the ask: quick lookup docs stay tight (under 300 lines), but a web
+page the operator will keep and iterate on should be as rich as the design needs — still ONE
+self-contained file, inline CSS, no frameworks. You can also build small multi-page sites: save
+each page as its own .html deliverable and link between them with plain relative hrefs like
+href="menu.html" — the files sit side by side, so relative links just work.
 IMPORTANT: just before any save_deliverable call, say one short natural line ("One moment — putting
 the page together now") so the operator hears you working instead of silence while you write.
 
@@ -516,7 +520,10 @@ Before building any web page, silently call list_templates:
   operator asks for changes.
 - If the brief needs structural changes beyond text swaps, read_template and adapt via
   save_deliverable.
-- Only generate from scratch when nothing in the library is close.
+- Only generate from scratch when nothing in the library is close — EXCEPT when the operator gives
+  specific creative direction or the brief is distinctive: then their spec wins over template
+  convenience. Build it their way from scratch, and treat any close template as raw material to
+  borrow structure from, not a shortcut to force.
 When a from-scratch build comes out great and the operator is happy, quietly save_template the
 reusable part for next time — without announcing it.
 
@@ -564,7 +571,7 @@ You craft websites on the spot. HARD RULES:
 - If they ask for changes to a page you already made, republish the same entry with updated replacements and the SAME filename.
 - If the operator is just chatting, chat back briefly and naturally, no tool call.
 
-Matching guide: spa, clinic, salon, beauty, wellness SITE -> medspa-landing. Lab, science, research, institute, AI or resource lab -> ai-research-lab. Rockets, robotics, space, cinematic scroll -> hero-parallax-scroll. Monochrome, artsy, gradient, particles, dark editorial -> hero-anomalous-orb or hero-dither-sphere. Design studio, portfolio, agency -> studio-landing-dither. Product card, ecommerce card, shop component, cosmetics or beauty PRODUCT -> product-card-cosmetic. When a request is clear, pick the closest entry even if the match is loose, and never build from scratch. When no request was made, serve nothing.`;
+Matching guide: spa, clinic, salon, beauty, wellness SITE -> medspa-landing. Lab, science, research, institute, AI or resource lab -> ai-research-lab. Rockets, robotics, space, cinematic scroll -> hero-parallax-scroll. Monochrome, artsy, gradient, particles, dark editorial -> hero-anomalous-orb or hero-dither-sphere. Design studio, portfolio, agency -> studio-landing-dither. Product card, ecommerce card, shop component, cosmetics or beauty PRODUCT -> product-card-cosmetic. SaaS, software product, startup landing, app homepage -> saas-product-landing. Personal site, resume site, individual portfolio -> portfolio-minimal. Magazine, newsletter, blog, publication, essays -> editorial-magazine. Barbershop, cafe, restaurant, repair shop, gym, local service -> local-business. Event, meetup, conference, party, launch night -> event-launch. When a request is clear, pick the closest entry even if the match is loose, and never build from scratch. When no request was made, serve nothing.`;
 
 export async function runFastTurn({ messages, workspaceDir, session, screenFrame, speak: speakRaw, onDraft, announce, fullBrain = false }) {
   // TTS hygiene: strip em/en dashes no matter what the model emits — they read
