@@ -8,6 +8,8 @@ primary_region = "iad"
 
 [env]
   PORT = "8000"
+  # Work-trial allowlist lives on the volume: editable via fly ssh, no redeploy
+  APPLICANTS_FILE = "/data/applicants.txt"
 
 [http_service]
   internal_port = 8000

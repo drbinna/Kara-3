@@ -566,18 +566,23 @@ You craft websites on the spot. HARD RULES:
 
 Matching guide: spa, clinic, salon, beauty, wellness SITE -> medspa-landing. Lab, science, research, institute, AI or resource lab -> ai-research-lab. Rockets, robotics, space, cinematic scroll -> hero-parallax-scroll. Monochrome, artsy, gradient, particles, dark editorial -> hero-anomalous-orb or hero-dither-sphere. Design studio, portfolio, agency -> studio-landing-dither. Product card, ecommerce card, shop component, cosmetics or beauty PRODUCT -> product-card-cosmetic. When a request is clear, pick the closest entry even if the match is loose, and never build from scratch. When no request was made, serve nothing.`;
 
-export async function runFastTurn({ messages, workspaceDir, session, screenFrame, speak: speakRaw, onDraft, announce }) {
+export async function runFastTurn({ messages, workspaceDir, session, screenFrame, speak: speakRaw, onDraft, announce, fullBrain = false }) {
   // TTS hygiene: strip em/en dashes no matter what the model emits — they read
   // as robotic pauses out loud.
   const speak = (t) => speakRaw(String(t).replace(/\s*[—–]+\s*/g, ', '));
 
+  // Brain per TURN: work-trial applicants (fullBrain) get the real toolkit;
+  // everyone else follows the global DEMO_MODE default. DEMO_MODE=0 still
+  // force-enables the full brain for all users (local dev).
+  const demoTurn = fullBrain ? false : DEMO_MODE;
+
   // Demo mode: the catalog rides inside the system prompt, so serving a page
   // is a single publish_template call — no list/read rounds, nothing to think.
-  const system = DEMO_MODE
+  const system = demoTurn
     ? `${DEMO_SYSTEM}\n\nCATALOG (internal — never mention it):\n${await listTemplates()}`
     : FAST_SYSTEM;
-  const turnTools = DEMO_MODE ? DEMO_TOOLS : undefined;
-  const turnModel = DEMO_MODE ? DEMO_MODEL : undefined;
+  const turnTools = demoTurn ? DEMO_TOOLS : undefined;
+  const turnModel = demoTurn ? DEMO_MODEL : undefined;
   // Anam history -> API messages (drop empties, coerce roles)
   const apiMessages = messages
     .filter((m) => m.content && String(m.content).trim())

@@ -10,6 +10,7 @@ import { runFastTurn } from './src/fast-brain.js';
 import { warmBrowser } from './src/browser-tools.js';
 import { DELIVERABLES_ROOT } from './src/deliverables.js';
 import { requireAuth, authRequired } from './src/auth.js';
+import { isApplicant } from './src/entitlements.js';
 import fsp from 'node:fs/promises';
 
 // Brain selection: 'fast' (default) = direct Messages API loop, no
@@ -133,6 +134,10 @@ app.post('/api/chat-stream', requireAuth, async (req, res) => {
   const { messages = [], conversationId, screenFrame } = req.body;
   const session = getSession(conversationId);
   if (req.userId) session.userId = req.userId; // ties transcripts to the applicant
+  // Work-trial applicants get the full brain for this turn; everyone else the
+  // demo brain. Resolved per request (cached in-process) so the allowlist can
+  // change mid-flight without a restart.
+  session.fullBrain = await isApplicant(req.userId);
   const lastUser = [...messages].reverse().find((m) => m.role === 'user');
   const prompt = lastUser?.content?.trim();
 
@@ -164,7 +169,9 @@ app.post('/api/chat-stream', requireAuth, async (req, res) => {
   const logTranscript = (caraText) => {
     const dir = path.join(__dirname, 'transcripts');
     const stamp = new Date().toISOString().slice(0, 19).replace('T', ' ');
-    const who = session.userId ? `You (${session.userId})` : 'You';
+    const who = session.userId
+      ? `You (${session.userId}${session.fullBrain ? ', trial' : ''})`
+      : 'You';
     const line = `[${stamp}] ${who}:  ${String(prompt).replace(/\s+/g, ' ')}\n[${stamp}] Kara: ${caraText}\n\n`;
     fsp.mkdir(dir, { recursive: true })
       .then(() => fsp.appendFile(path.join(dir, `${session.id}.log`), line))
@@ -179,6 +186,7 @@ app.post('/api/chat-stream', requireAuth, async (req, res) => {
     try {
       await runFastTurn({
         messages, workspaceDir: WORKSPACE_DIR, session,
+        fullBrain: session.fullBrain,
         screenFrame: screenFrame || null, speak: speakLogged,
         onDraft: (d) => control({ draft: d }), // live document panel
         // Delivery announcement: shipped as a control so the client speaks it
