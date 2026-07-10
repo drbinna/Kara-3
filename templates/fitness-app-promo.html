@@ -1,0 +1,77 @@
+<!-- desc: Dark, punchy running/fitness APP promo landing (app-download style): full-bleed dark hero with a CSS phone mockup, big condensed headline, app-store CTA buttons, a three-stat band, a three-feature row, and a closing download CTA. All original, no external images or third-party brand assets. Publish instantly with publish_template, swapping the strings below. Swappable strings: app name "STRIDE", eyebrow "FREE RUNNING APP", hero headline "Your run, tracked." , hero sub "Map every mile, chase every goal, and never run alone.", cta primary "Get the app", stats "2M+" / "runs logged daily", "150" / "countries", "4.9" / "app store rating", feature titles "Live tracking" / "Guided runs" / "Your crew", feature blurbs "GPS pace, distance, and splits in real time." / "Audio coaching that adapts to how you move." / "Challenge friends and share every finish.", closing headline "Lace up. We'll handle the rest.". -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>STRIDE</title>
+<style>
+  :root{--bg:#08090c;--ink:#f4f5f7;--mut:#9aa0ab;--acc:#c6ff2e;--card:#12141a;--line:rgba(255,255,255,.1)}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Helvetica Neue',Arial,system-ui,sans-serif;background:var(--bg);color:var(--ink);line-height:1.5}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+  nav{display:flex;justify-content:space-between;align-items:center;padding:20px 0}
+  .brand{font-weight:900;font-size:22px;letter-spacing:-.03em;font-style:italic}
+  nav a.mini{color:var(--acc);text-decoration:none;font-weight:700;font-size:14px}
+  .hero{display:grid;grid-template-columns:1.1fr .9fr;gap:32px;align-items:center;padding:48px 0 64px}
+  .eyebrow{font-size:12px;font-weight:800;letter-spacing:.28em;color:var(--acc)}
+  .hero h1{font-family:'Arial Narrow',Arial,sans-serif;font-weight:900;font-size:clamp(3rem,8vw,5.6rem);line-height:.9;text-transform:uppercase;letter-spacing:-.02em;margin:14px 0}
+  .hero p{color:var(--mut);font-size:18px;max-width:400px;margin-bottom:26px}
+  .ctas{display:flex;gap:12px;flex-wrap:wrap}
+  .btn{display:inline-block;text-decoration:none;font-weight:800;font-size:14px;padding:15px 30px;border-radius:999px}
+  .btn.pri{background:var(--acc);color:#08090c}
+  .btn.sec{border:1.5px solid var(--line);color:var(--ink)}
+  .btn:hover{opacity:.9}
+  /* pure-CSS phone mockup */
+  .phone{justify-self:center;width:230px;height:470px;border-radius:38px;background:linear-gradient(160deg,#1b1e26,#0a0b0f);border:2px solid #2a2e38;box-shadow:0 40px 90px rgba(0,0,0,.6);padding:16px;position:relative}
+  .phone::before{content:"";position:absolute;top:14px;left:50%;transform:translateX(-50%);width:90px;height:6px;border-radius:6px;background:#2a2e38}
+  .screen{height:100%;border-radius:26px;background:radial-gradient(120% 80% at 50% 0,#17202a,#0b0e13);display:flex;flex-direction:column;justify-content:center;align-items:center;gap:6px;padding:20px;text-align:center}
+  .screen .big{font-family:'Arial Narrow',Arial,sans-serif;font-weight:900;font-size:64px;color:var(--acc);line-height:1}
+  .screen .unit{color:var(--mut);font-size:12px;letter-spacing:.16em;text-transform:uppercase}
+  .screen .ring{margin-top:18px;width:120px;height:120px;border-radius:50%;border:8px solid #1e2530;border-top-color:var(--acc);border-right-color:var(--acc)}
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;background:var(--line);border-radius:16px;overflow:hidden;margin-bottom:56px}
+  .stat{background:var(--card);padding:26px 18px;text-align:center}
+  .stat .n{font-family:'Arial Narrow',Arial,sans-serif;font-weight:900;font-size:clamp(2rem,5vw,3rem);color:var(--acc)}
+  .stat .l{color:var(--mut);font-size:13px}
+  .feat{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;padding-bottom:60px}
+  .feat .f{border-top:2px solid var(--acc);padding-top:16px}
+  .feat h3{font-size:18px;margin-bottom:6px}
+  .feat p{color:var(--mut);font-size:14.5px}
+  .close{text-align:center;padding:64px 0 40px;border-top:1px solid var(--line)}
+  .close h2{font-family:'Arial Narrow',Arial,sans-serif;font-weight:900;font-size:clamp(2rem,6vw,3.6rem);text-transform:uppercase;letter-spacing:-.01em;margin-bottom:22px}
+  footer{color:var(--mut);font-size:12.5px;text-align:center;padding:24px 0 40px}
+  @media(max-width:760px){.hero,.feat{grid-template-columns:1fr}.phone{margin-top:20px}}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <nav><div class="brand">STRIDE</div><a class="mini" href="#get">Get the app</a></nav>
+    <header class="hero">
+      <div>
+        <div class="eyebrow">FREE RUNNING APP</div>
+        <h1>Your run, tracked.</h1>
+        <p>Map every mile, chase every goal, and never run alone.</p>
+        <div class="ctas"><a class="btn pri" href="#get">Get the app</a><a class="btn sec" href="#features">See features</a></div>
+      </div>
+      <div class="phone"><div class="screen">
+        <div class="big">5.2</div><div class="unit">miles today</div>
+        <div class="ring"></div>
+      </div></div>
+    </header>
+    <section class="stats">
+      <div class="stat"><div class="n">2M+</div><div class="l">runs logged daily</div></div>
+      <div class="stat"><div class="n">150</div><div class="l">countries</div></div>
+      <div class="stat"><div class="n">4.9</div><div class="l">app store rating</div></div>
+    </section>
+    <section class="feat" id="features">
+      <div class="f"><h3>Live tracking</h3><p>GPS pace, distance, and splits in real time.</p></div>
+      <div class="f"><h3>Guided runs</h3><p>Audio coaching that adapts to how you move.</p></div>
+      <div class="f"><h3>Your crew</h3><p>Challenge friends and share every finish.</p></div>
+    </section>
+    <section class="close" id="get">
+      <h2>Lace up. We'll handle the rest.</h2>
+      <a class="btn pri" href="#">Get the app</a>
+    </section>
+  </div>
+  <footer>STRIDE — free on iOS and Android.</footer>
+</body>
+</html>
