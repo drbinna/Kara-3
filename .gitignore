@@ -5,3 +5,4 @@ transcripts/
 *.log
 .DS_Store
 applicants.txt
+trial/data/
