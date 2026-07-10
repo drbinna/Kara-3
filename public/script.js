@@ -501,7 +501,35 @@ function clerkReady() {
   if (clerkLoading) return clerkLoading;
   clerkLoading = (async () => {
     while (!window.Clerk) await new Promise((r) => setTimeout(r, 50));
-    if (!window.Clerk.loaded) await window.Clerk.load();
+    if (!window.Clerk.loaded) await window.Clerk.load({
+      // Theme every Clerk surface (modal, loading states, spinner) to match
+      // the page: near-black card, dashed hairline, warm text, green accent.
+      appearance: {
+        variables: {
+          colorPrimary: '#22A03A',
+          colorBackground: '#0a0a0a',
+          colorText: '#f0efe9',
+          colorTextSecondary: 'rgba(255,255,255,0.55)',
+          colorTextOnPrimaryBackground: '#000000',
+          colorInputBackground: '#141414',
+          colorInputText: '#f0efe9',
+          colorNeutral: '#f0efe9',
+          colorDanger: '#e08585',
+          borderRadius: '14px',
+          fontFamily: "system-ui, -apple-system, 'Segoe UI', sans-serif",
+        },
+        elements: {
+          modalBackdrop: { backgroundColor: 'rgba(5,5,5,0.82)', backdropFilter: 'blur(6px)' },
+          card: { border: '1px dashed rgba(255,255,255,0.18)', boxShadow: '0 30px 80px rgba(0,0,0,0.65)' },
+          socialButtonsBlockButton: {
+            border: '1px solid rgba(255,255,255,0.16)',
+            backgroundColor: 'rgba(255,255,255,0.05)',
+          },
+          dividerLine: { backgroundColor: 'rgba(255,255,255,0.12)' },
+          spinner: { color: '#22A03A' },
+        },
+      },
+    });
     return window.Clerk;
   })();
   return clerkLoading;
