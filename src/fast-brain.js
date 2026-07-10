@@ -573,6 +573,15 @@ design direction ("make it like this") too.
 
 If asked to change local files or run commands, say you can't.`;
 
+/* Appended to the system prompt ONLY on turns where the operator is actively
+ * sharing their screen (a frame is attached). Lets Kara "take over" the page
+ * they're looking at by opening it in her own browser for the real DOM — and
+ * because it's gated on the live frame, she has neither this instruction nor a
+ * URL to read when sharing is off. */
+const SCREEN_SHARE_ADDENDUM = `
+
+SCREEN SHARING IS ON RIGHT NOW. The image with the operator's message is their live screen. If they're on a website and you need its real content, structure, or exact styling (to rebuild it, analyze it, or work with it properly), do not just squint at the picture: read the page's web address from the shared frame (the address bar, or a URL shown on the page) and open it yourself with browser_open. That gives you the true DOM and styles instead of a guess. Say one short line first ("Let me pull that up on my end"). If no address is visible (they're sharing a single tab with no address bar), just ask them for the link, or offer the Kara Capture extension for private pages. Only mirror their page this way while they are actively sharing.`;
+
 /* DEMO MODE (default ON — set DEMO_MODE=0 for the full brain above).
  * Kara serves pre-built pages only: ONE tool (publish_template), the template
  * catalog inlined into her prompt every turn (no list/read round-trips, no
@@ -612,9 +621,14 @@ export async function runFastTurn({ messages, workspaceDir, session, screenFrame
 
   // Demo mode: the catalog rides inside the system prompt, so serving a page
   // is a single publish_template call — no list/read rounds, nothing to think.
-  const system = demoTurn
+  let system = demoTurn
     ? `${DEMO_SYSTEM}\n\nCATALOG (internal — never mention it):\n${await listTemplates()}`
     : FAST_SYSTEM;
+  // Screen-share mirroring — gated: this addendum exists ONLY on turns where a
+  // screen frame is attached (i.e. sharing is ON right now). When sharing is
+  // off there is no frame and no instruction, so she never reaches into the
+  // operator's page uninvited. Full brain only (the demo brain can't browse).
+  if (screenFrame && !demoTurn) system += SCREEN_SHARE_ADDENDUM;
   const turnTools = demoTurn ? DEMO_TOOLS : undefined;
   const turnModel = demoTurn ? DEMO_MODEL : undefined;
   // Anam history -> API messages (drop empties, coerce roles)
