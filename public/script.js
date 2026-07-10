@@ -589,7 +589,12 @@ async function startConversation() {
     // visitor clicks Start again — no auto-dial, no surprise mic prompt.
     const clerk = await clerkReady().catch(() => null);
     if (clerk && !clerk.user) {
-      clerk.openSignIn();
+      // Force the OAuth round-trip to land back HERE — without this, Clerk
+      // falls back to the instance home URL (usegoblin.xyz) after Google.
+      clerk.openSignIn({
+        forceRedirectUrl: window.location.href,
+        signUpForceRedirectUrl: window.location.href,
+      });
       startButton.disabled = false;
       updateStatus('Sign in, then press Start again', 'loading');
       return;
@@ -600,7 +605,10 @@ async function startConversation() {
       headers: await authHeaders(),
     });
     if (response.status === 401) {
-      clerk?.openSignIn();
+      clerk?.openSignIn({
+        forceRedirectUrl: window.location.href,
+        signUpForceRedirectUrl: window.location.href,
+      });
       startButton.disabled = false;
       updateStatus('Sign in, then press Start again', 'loading');
       return;

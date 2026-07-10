@@ -8,6 +8,9 @@ primary_region = "iad"
 
 [env]
   PORT = "8000"
+  # Every signed-in user gets the full brain (Obi's call, 2026-07-10).
+  # The applicants allowlist still tags trial transcripts for review.
+  DEMO_MODE = "0"
   # Work-trial allowlist lives on the volume: editable via fly ssh, no redeploy
   APPLICANTS_FILE = "/data/applicants.txt"
 
@@ -23,6 +26,6 @@ primary_region = "iad"
   destination = "/data"
 
 [[vm]]
-  memory = "1gb"
+  memory = "2gb"
   cpu_kind = "shared"
-  cpus = 1
+  cpus = 2
