@@ -1,0 +1,511 @@
+<!-- desc: LinkedIn-style professional social feed: left profile sidebar, center post composer + scrolling feed of posts, right news/ads panel. Publish instantly with publish_template, swapping the strings below. Swappable strings: profile name "Alex Morgan", profile headline "Senior Product Designer · Open to work", a feed author "Head of Design @ Notion · 12,400 followers", another author "Engineering Manager @ Stripe · He/him", another "Founder & CEO @ Fieldnote · ex-Google", news headlines "AI tools reshaping product roles" / "Big Tech hiring outlook for Q3" / "Remote work debate reignites" / "Startup funding hits 18-month high" / "Design systems on the rise", composer prompt "Start a post". -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>LinkedIn – Feed</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f3f2ef; color: #000; font-size: 14px; }
+
+  /* NAV */
+  nav {
+    background: #fff;
+    border-bottom: 1px solid #e0dfdc;
+    position: sticky; top: 0; z-index: 100;
+    display: flex; align-items: center; gap: 4px;
+    padding: 0 24px; height: 52px;
+  }
+  .nav-logo { font-size: 28px; font-weight: 900; color: #0a66c2; letter-spacing: -1px; margin-right: 8px; }
+  .nav-search {
+    display: flex; align-items: center; background: #eef3f8; border-radius: 4px;
+    padding: 6px 12px; gap: 8px; min-width: 260px;
+  }
+  .nav-search svg { color: #666; flex-shrink: 0; }
+  .nav-search input { background: none; border: none; outline: none; font-size: 14px; color: #333; width: 100%; }
+  .nav-items { display: flex; align-items: stretch; margin-left: auto; gap: 2px; }
+  .nav-item {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 2px; padding: 0 12px; cursor: pointer; border-bottom: 2px solid transparent;
+    color: #666; font-size: 11px; text-decoration: none; min-width: 60px; height: 52px;
+    transition: color 0.15s;
+  }
+  .nav-item:hover { color: #000; border-bottom-color: #000; }
+  .nav-item.active { color: #000; border-bottom-color: #000; }
+  .nav-item svg { width: 22px; height: 22px; }
+  .nav-item span { font-size: 11px; }
+  .nav-avatar {
+    width: 24px; height: 24px; border-radius: 50%; background: #a0b4c8;
+    overflow: hidden; display: flex; align-items: center; justify-content: center;
+    font-size: 11px; color: #fff; font-weight: 600;
+  }
+  .nav-item-me { border-left: 1px solid #e0dfdc; margin-left: 8px; }
+  .nav-item-work { border-left: 1px solid #e0dfdc; }
+  .nav-btn-premium {
+    margin-left: 8px; padding: 4px 12px; border: 1px solid #915907; color: #915907;
+    background: none; border-radius: 16px; font-size: 13px; font-weight: 600; cursor: pointer;
+    white-space: nowrap;
+  }
+
+  /* LAYOUT */
+  .page { max-width: 1128px; margin: 0 auto; padding: 24px 16px; display: grid; grid-template-columns: 225px 1fr 300px; gap: 24px; align-items: start; }
+
+  /* LEFT SIDEBAR */
+  .sidebar-left { display: flex; flex-direction: column; gap: 8px; }
+  .card { background: #fff; border: 1px solid #e0dfdc; border-radius: 8px; overflow: hidden; }
+
+  .profile-card { text-align: center; }
+  .profile-banner { height: 56px; background: linear-gradient(135deg,#1a6aad 0%,#0a3a6b 100%); }
+  .profile-avatar {
+    width: 72px; height: 72px; border-radius: 50%; background: #a0b4c8;
+    border: 3px solid #fff; margin: -36px auto 8px; display: flex; align-items: center;
+    justify-content: center; font-size: 28px; color: #fff; font-weight: 700;
+  }
+  .profile-name { font-weight: 600; font-size: 16px; padding: 0 16px; }
+  .profile-title { color: #666; font-size: 12px; padding: 2px 16px 12px; line-height: 1.4; }
+  .profile-divider { border: none; border-top: 1px solid #e0dfdc; margin: 0; }
+  .profile-stat { display: flex; justify-content: space-between; align-items: center; padding: 8px 16px; font-size: 12px; color: #666; cursor: pointer; }
+  .profile-stat:hover { background: #f3f2ef; }
+  .profile-stat-val { font-weight: 600; color: #0a66c2; font-size: 13px; }
+  .profile-cta { padding: 12px 16px; }
+  .btn-gold { display: block; background: linear-gradient(90deg,#e7a33e,#c5871a); color: #fff; text-align: center; border-radius: 16px; padding: 8px; font-size: 13px; font-weight: 600; cursor: pointer; text-decoration: none; }
+
+  .recent-card { }
+  .recent-title { font-size: 12px; font-weight: 600; color: #666; padding: 12px 16px 4px; }
+  .recent-item { display: flex; align-items: center; gap: 8px; padding: 6px 16px; font-size: 13px; color: #333; cursor: pointer; text-decoration: none; }
+  .recent-item:hover { color: #0a66c2; background: #f3f2ef; }
+  .recent-item svg { color: #0a66c2; flex-shrink: 0; }
+
+  /* FEED */
+  .feed { display: flex; flex-direction: column; gap: 8px; }
+  .post-box { padding: 12px 16px; display: flex; align-items: center; gap: 8px; }
+  .post-box-avatar {
+    width: 48px; height: 48px; border-radius: 50%; border: 1px solid #c7c7c7;
+    background: #a0b4c8; display: flex; align-items: center; justify-content: center;
+    font-size: 20px; color: #fff; font-weight: 600; flex-shrink: 0;
+  }
+  .post-box-btn {
+    flex: 1; border: 1px solid #c7c7c7; border-radius: 24px; padding: 10px 16px;
+    background: none; cursor: pointer; text-align: left; color: #666; font-size: 14px; font-weight: 600;
+  }
+  .post-box-btn:hover { background: #f3f2ef; }
+  .post-actions { display: flex; justify-content: space-around; border-top: 1px solid #e0dfdc; padding: 4px 0; }
+  .post-action { display: flex; align-items: center; gap: 6px; padding: 10px 12px; color: #666; font-size: 13px; font-weight: 600; cursor: pointer; border-radius: 4px; }
+  .post-action:hover { background: #f3f2ef; color: #333; }
+  .post-action svg { color: #666; }
+
+  .sort-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 16px; }
+  .sort-divider { flex: 1; border: none; border-top: 1px solid #e0dfdc; }
+  .sort-btn { color: #666; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 4px; white-space: nowrap; }
+
+  /* POST */
+  .post { }
+  .post-header { display: flex; align-items: flex-start; gap: 8px; padding: 12px 16px 0; }
+  .post-ava {
+    width: 48px; height: 48px; border-radius: 50%; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; font-size: 20px; color: #fff; font-weight: 700;
+  }
+  .post-meta { flex: 1; }
+  .post-meta-name { font-weight: 600; font-size: 14px; cursor: pointer; }
+  .post-meta-name:hover { color: #0a66c2; text-decoration: underline; }
+  .post-meta-title { color: #666; font-size: 12px; }
+  .post-meta-time { color: #666; font-size: 12px; }
+  .post-more { padding: 8px; cursor: pointer; color: #666; font-size: 18px; line-height: 1; }
+  .post-more:hover { color: #333; }
+  .post-body { padding: 8px 16px 12px; font-size: 14px; line-height: 1.6; color: #333; }
+  .post-body a { color: #0a66c2; text-decoration: none; }
+  .post-body a:hover { text-decoration: underline; }
+  .post-image { width: 100%; display: block; object-fit: cover; max-height: 400px; background: #e0e7ef; }
+  .post-image-placeholder { height: 280px; background: linear-gradient(135deg,#dce8f5,#b8cfe8); display: flex; align-items: center; justify-content: center; color: #6a9cc0; font-size: 48px; }
+  .post-reactions { display: flex; align-items: center; gap: 4px; padding: 6px 16px; font-size: 12px; color: #666; border-bottom: 1px solid #e0dfdc; }
+  .reaction-icons { display: flex; margin-right: 4px; }
+  .ri { width: 18px; height: 18px; border-radius: 50%; border: 1px solid #fff; margin-right: -4px; font-size: 11px; display: flex; align-items: center; justify-content: center; }
+  .post-footer { display: flex; justify-content: space-around; padding: 2px 4px; }
+  .post-btn { display: flex; align-items: center; gap: 6px; padding: 10px 8px; color: #666; font-size: 13px; font-weight: 600; cursor: pointer; border-radius: 4px; flex: 1; justify-content: center; }
+  .post-btn:hover { background: #f3f2ef; color: #333; }
+
+  /* RIGHT SIDEBAR */
+  .sidebar-right { display: flex; flex-direction: column; gap: 8px; }
+  .news-title { font-weight: 600; font-size: 15px; padding: 12px 16px 8px; display: flex; justify-content: space-between; align-items: center; }
+  .news-info { font-size: 12px; font-weight: 400; color: #666; }
+  .news-item { padding: 8px 16px; display: flex; align-items: flex-start; gap: 8px; cursor: pointer; }
+  .news-item:hover { background: #f3f2ef; }
+  .news-bullet { font-size: 16px; font-weight: 900; color: #000; flex-shrink: 0; margin-top: 1px; }
+  .news-text { font-size: 13px; font-weight: 600; line-height: 1.4; }
+  .news-sub { font-size: 12px; color: #666; margin-top: 2px; }
+  .news-show-more { padding: 8px 16px 12px; font-size: 13px; font-weight: 600; color: #666; cursor: pointer; }
+  .news-show-more:hover { color: #0a66c2; }
+
+  .ad-card { padding: 12px 16px; font-size: 12px; color: #666; }
+  .ad-card-img { height: 100px; background: linear-gradient(135deg,#0a3a6b,#1a6aad); border-radius: 4px; margin-bottom: 8px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 28px; }
+  .ad-card-brand { font-weight: 600; color: #333; font-size: 13px; }
+  .ad-card-desc { color: #666; margin: 2px 0 8px; line-height: 1.4; }
+  .btn-follow { border: 1px solid #666; border-radius: 16px; padding: 5px 16px; background: none; font-size: 13px; font-weight: 600; color: #666; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+  .btn-follow:hover { background: #f3f2ef; border-color: #333; color: #333; }
+
+  .footer-links { padding: 12px 16px; display: flex; flex-wrap: wrap; gap: 8px 12px; font-size: 11px; color: #666; }
+  .footer-links a { color: #666; text-decoration: none; }
+  .footer-links a:hover { color: #0a66c2; text-decoration: underline; }
+
+  @media (max-width: 900px) {
+    .page { grid-template-columns: 200px 1fr; }
+    .sidebar-right { display: none; }
+  }
+  @media (max-width: 600px) {
+    .page { grid-template-columns: 1fr; }
+    .sidebar-left { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">in</div>
+  <div class="nav-search">
+    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+    <input type="text" placeholder="Search" />
+  </div>
+  <div class="nav-items">
+    <a class="nav-item active" href="#">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+      <span>Home</span>
+    </a>
+    <a class="nav-item" href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      <span>My Network</span>
+    </a>
+    <a class="nav-item" href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+      <span>Jobs</span>
+    </a>
+    <a class="nav-item" href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      <span>Messaging</span>
+    </a>
+    <a class="nav-item" href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      <span>Notifications</span>
+    </a>
+    <a class="nav-item nav-item-me" href="#">
+      <div class="nav-avatar">A</div>
+      <span>Me ▾</span>
+    </a>
+    <a class="nav-item nav-item-work" href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      <span>For Business ▾</span>
+    </a>
+  </div>
+  <button class="nav-btn-premium">Try Premium</button>
+</nav>
+
+<!-- PAGE -->
+<div class="page">
+
+  <!-- LEFT SIDEBAR -->
+  <aside class="sidebar-left">
+    <div class="card profile-card">
+      <div class="profile-banner"></div>
+      <div class="profile-avatar">A</div>
+      <div class="profile-name">Alex Morgan</div>
+      <div class="profile-title">Senior Product Designer · Open to work</div>
+      <hr class="profile-divider" />
+      <div class="profile-stat">
+        <span>Profile viewers</span>
+        <span class="profile-stat-val">142</span>
+      </div>
+      <div class="profile-stat">
+        <span>Post impressions</span>
+        <span class="profile-stat-val">1,830</span>
+      </div>
+      <hr class="profile-divider" />
+      <div class="profile-cta">
+        <a class="btn-gold" href="#">✦ Access exclusive tools</a>
+      </div>
+    </div>
+
+    <div class="card recent-card">
+      <div class="recent-title">Recent</div>
+      <a class="recent-item" href="#">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>
+        UX Design Community
+      </a>
+      <a class="recent-item" href="#">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>
+        Product Managers Hub
+      </a>
+      <a class="recent-item" href="#">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>
+        Startup Founders Network
+      </a>
+      <a class="recent-item" href="#">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        #ProductDesign
+      </a>
+      <a class="recent-item" href="#">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        #OpenToWork
+      </a>
+    </div>
+  </aside>
+
+  <!-- MAIN FEED -->
+  <main class="feed">
+
+    <!-- Post composer -->
+    <div class="card">
+      <div class="post-box">
+        <div class="post-box-avatar">A</div>
+        <button class="post-box-btn">Start a post</button>
+      </div>
+      <div class="post-actions">
+        <div class="post-action">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#378fe9" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          Photo
+        </div>
+        <div class="post-action">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5f9b41" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+          Video
+        </div>
+        <div class="post-action">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#e06847" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          Write article
+        </div>
+        <div class="post-action">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#a26dca" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          Event
+        </div>
+      </div>
+    </div>
+
+    <!-- Sort row -->
+    <div class="card sort-row" style="padding:8px 16px;">
+      <hr class="sort-divider" />
+      <div class="sort-btn" style="margin:0 12px;">
+        ✦ Sort by: Top
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <hr class="sort-divider" />
+    </div>
+
+    <!-- Post 1 -->
+    <div class="card post">
+      <div class="post-header">
+        <div class="post-ava" style="background:linear-gradient(135deg,#1a6aad,#0a3a6b)">S</div>
+        <div class="post-meta">
+          <div class="post-meta-name">Sarah Chen · 2nd</div>
+          <div class="post-meta-title">Head of Design @ Notion · 12,400 followers</div>
+          <div class="post-meta-time">3h · 🌐</div>
+        </div>
+        <div class="post-more">···</div>
+      </div>
+      <div class="post-body">
+        After 5 years of building design systems, here's the single biggest mistake teams make: they document the components but not the <strong>decisions</strong>.<br><br>
+        The "why" is more valuable than the "what." A component without context will be misused every time.<br><br>
+        What decisions are you capturing in your design system? 👇
+      </div>
+      <div class="post-reactions">
+        <div class="reaction-icons">
+          <div class="ri" style="background:#378fe9;">👍</div>
+          <div class="ri" style="background:#e06847;">❤️</div>
+          <div class="ri" style="background:#f5c518;">🎉</div>
+        </div>
+        <span>2,847 · </span>
+        <span style="margin-left:4px;">148 comments · 52 reposts</span>
+      </div>
+      <div class="post-footer">
+        <div class="post-btn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/><path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>
+          Like
+        </div>
+        <div class="post-btn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          Comment
+        </div>
+        <div class="post-btn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+          Repost
+        </div>
+        <div class="post-btn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          Send
+        </div>
+      </div>
+    </div>
+
+    <!-- Post 2 with image placeholder -->
+    <div class="card post">
+      <div class="post-header">
+        <div class="post-ava" style="background:linear-gradient(135deg,#e06847,#b03a1a)">M</div>
+        <div class="post-meta">
+          <div class="post-meta-name">Marcus Williams · 1st</div>
+          <div class="post-meta-title">Engineering Manager @ Stripe · He/him</div>
+          <div class="post-meta-time">6h · 🌐</div>
+        </div>
+        <div class="post-more">···</div>
+      </div>
+      <div class="post-body">
+        We just shipped our new onboarding flow. Conversion up 34% in the first week.<br><br>
+        The secret? We removed 60% of the steps. Sometimes less is actually more. 🚀
+      </div>
+      <div class="post-image-placeholder">📊</div>
+      <div class="post-reactions">
+        <div class="reaction-icons">
+          <div class="ri" style="background:#378fe9;">👍</div>
+          <div class="ri" style="background:#f5c518;">🎉</div>
+        </div>
+        <span>1,204 · 87 comments · 31 reposts</span>
+      </div>
+      <div class="post-footer">
+        <div class="post-btn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/><path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>
+          Like
+        </div>
+        <div class="post-btn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          Comment
+        </div>
+        <div class="post-btn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+          Repost
+        </div>
+        <div class="post-btn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          Send
+        </div>
+      </div>
+    </div>
+
+    <!-- Post 3 -->
+    <div class="card post">
+      <div class="post-header">
+        <div class="post-ava" style="background:linear-gradient(135deg,#5f9b41,#2e5a1e)">P</div>
+        <div class="post-meta">
+          <div class="post-meta-name">Priya Nair · 2nd</div>
+          <div class="post-meta-title">Founder & CEO @ Fieldnote · ex-Google</div>
+          <div class="post-meta-time">1d · 🌐</div>
+        </div>
+        <div class="post-more">···</div>
+      </div>
+      <div class="post-body">
+        Hot take: most "data-driven" decisions are actually "data-justified" decisions.<br><br>
+        You already know what you want to do. The data is just the cover story you show leadership.<br><br>
+        Be honest about it. Your instincts aren't the enemy.
+      </div>
+      <div class="post-reactions">
+        <div class="reaction-icons">
+          <div class="ri" style="background:#378fe9;">👍</div>
+          <div class="ri" style="background:#e06847;">❤️</div>
+        </div>
+        <span>4,512 · 321 comments · 104 reposts</span>
+      </div>
+      <div class="post-footer">
+        <div class="post-btn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/><path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>
+          Like
+        </div>
+        <div class="post-btn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          Comment
+        </div>
+        <div class="post-btn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+          Repost
+        </div>
+        <div class="post-btn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          Send
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- RIGHT SIDEBAR -->
+  <aside class="sidebar-right">
+    <div class="card">
+      <div class="news-title">
+        LinkedIn News
+        <span class="news-info">ℹ️</span>
+      </div>
+      <div class="news-item">
+        <div class="news-bullet">·</div>
+        <div>
+          <div class="news-text">AI tools reshaping product roles</div>
+          <div class="news-sub">2h ago · 4,821 readers</div>
+        </div>
+      </div>
+      <div class="news-item">
+        <div class="news-bullet">·</div>
+        <div>
+          <div class="news-text">Remote work debate reignites</div>
+          <div class="news-sub">5h ago · 8,103 readers</div>
+        </div>
+      </div>
+      <div class="news-item">
+        <div class="news-bullet">·</div>
+        <div>
+          <div class="news-text">Design systems on the rise</div>
+          <div class="news-sub">8h ago · 3,244 readers</div>
+        </div>
+      </div>
+      <div class="news-item">
+        <div class="news-bullet">·</div>
+        <div>
+          <div class="news-text">Startup funding hits 18-month high</div>
+          <div class="news-sub">12h ago · 6,572 readers</div>
+        </div>
+      </div>
+      <div class="news-item">
+        <div class="news-bullet">·</div>
+        <div>
+          <div class="news-text">Big Tech hiring outlook for Q3</div>
+          <div class="news-sub">1d ago · 11,890 readers</div>
+        </div>
+      </div>
+      <div class="news-show-more">Show more ›</div>
+    </div>
+
+    <div class="card">
+      <div class="news-title" style="font-size:13px;">Add to your feed</div>
+      <div style="padding:0 16px 12px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+          <div style="width:48px;height:48px;border-radius:8px;background:linear-gradient(135deg,#0a66c2,#1a3a6b);display:flex;align-items:center;justify-content:center;font-size:22px;color:#fff;flex-shrink:0;">🎨</div>
+          <div style="flex:1;">
+            <div style="font-weight:600;font-size:13px;">Figma</div>
+            <div style="font-size:12px;color:#666;">Software company</div>
+          </div>
+        </div>
+        <button class="btn-follow">+ Follow</button>
+      </div>
+      <hr style="border:none;border-top:1px solid #e0dfdc;" />
+      <div style="padding:12px 16px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+          <div style="width:48px;height:48px;border-radius:8px;background:linear-gradient(135deg,#e06847,#5a1e0a);display:flex;align-items:center;justify-content:center;font-size:22px;color:#fff;flex-shrink:0;">🚀</div>
+          <div style="flex:1;">
+            <div style="font-weight:600;font-size:13px;">Product Hunt</div>
+            <div style="font-size:12px;color:#666;">Internet company</div>
+          </div>
+        </div>
+        <button class="btn-follow">+ Follow</button>
+      </div>
+    </div>
+
+    <div class="footer-links">
+      <a href="#">About</a>
+      <a href="#">Accessibility</a>
+      <a href="#">Help Center</a>
+      <a href="#">Privacy &amp; Terms</a>
+      <a href="#">Ad Choices</a>
+      <a href="#">Advertising</a>
+      <a href="#">Business Services</a>
+      <a href="#">Get the LinkedIn app</a>
+      <a href="#">More</a>
+      <div style="color:#999;width:100%;">LinkedIn © 2024</div>
+    </div>
+  </aside>
+
+</div>
+</body>
+</html>
