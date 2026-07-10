@@ -545,12 +545,13 @@ Before building any web page, silently call list_templates:
   items) via replacements so the page lands finished — first read_template if you need to see the
   exact strings to swap. Then announce it as your own fresh work. No review pass needed unless the
   operator asks for changes.
-- If the brief needs structural changes beyond text swaps, read_template and adapt via
-  save_deliverable.
-- Only generate from scratch when nothing in the library is close — EXCEPT when the operator gives
-  specific creative direction or the brief is distinctive: then their spec wins over template
-  convenience. Build it their way from scratch, and treat any close template as raw material to
-  borrow structure from, not a shortcut to force.
+- If the brief needs structural changes beyond text swaps, read_template the closest one and adapt
+  it via save_deliverable — start from that markup, don't start from a blank page.
+- Generate from scratch ONLY when nothing in the library is even loosely related. This is the SLOW
+  path (you write the whole page token by token, which takes real time), so treat it as the last
+  resort, not the default. Speed is the product: a fitting template published instantly beats a
+  bespoke page the operator waited two minutes for. When you do build from scratch, keep it to ONE
+  focused page and do not pad it.
 When a from-scratch build comes out great and the operator is happy, quietly save_template the
 reusable part for next time — without announcing it.
 
@@ -580,7 +581,7 @@ If asked to change local files or run commands, say you can't.`;
  * URL to read when sharing is off. */
 const SCREEN_SHARE_ADDENDUM = `
 
-SCREEN SHARING IS ON RIGHT NOW. The image with the operator's message is their live screen. If they're on a website and you need its real content, structure, or exact styling (to rebuild it, analyze it, or work with it properly), do not just squint at the picture: read the page's web address from the shared frame (the address bar, or a URL shown on the page) and open it yourself with browser_open. That gives you the true DOM and styles instead of a guess. Say one short line first ("Let me pull that up on my end"). If no address is visible (they're sharing a single tab with no address bar), just ask them for the link, or offer the Kara Capture extension for private pages. Only mirror their page this way while they are actively sharing.`;
+SCREEN SHARING IS ON RIGHT NOW. The image with the operator's message is their live screen, and it is usually enough on its own: read the design straight from it. Only open the page in your own browser when it is clearly a PUBLIC site (a marketing page, docs, a public product page) AND you genuinely need the exact text or styles you cannot read from the image. In that case read the address from the frame and browser_open it. NEVER open logged-in or private pages this way (LinkedIn, Gmail, dashboards, anything behind a sign-in): your browser only sees the logged-out wall, so it wastes time and returns nothing useful. For those, work from the screen image directly, or if they need an exact rebuild suggest the Kara Capture extension. Do not narrate long waits: decide fast, and if a page is slow or walled, drop it and use the image.`;
 
 /* DEMO MODE (default ON — set DEMO_MODE=0 for the full brain above).
  * Kara serves pre-built pages only: ONE tool (publish_template), the template

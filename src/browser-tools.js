@@ -74,7 +74,13 @@ async function summary(page, chars = 3500) {
 export async function browserOpen(sessionId, url) {
   const page = await getPage(sessionId);
   const target = /^https?:\/\//i.test(url) ? url : `https://${url}`;
-  await page.goto(target, { waitUntil: 'domcontentloaded', timeout: 10000 });
+  // Cap the wait tightly: a page that isn't ready in 6s (slow, walled, or
+  // login-gated) should hand control back fast, not stall the whole turn.
+  try {
+    await page.goto(target, { waitUntil: 'domcontentloaded', timeout: 6000 });
+  } catch {
+    return `Couldn't load ${target} quickly (it may be slow or behind a login). Don't wait on it — work from what you already have.`;
+  }
   return summary(page);
 }
 
