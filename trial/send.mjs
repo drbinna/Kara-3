@@ -95,7 +95,18 @@ const toHtml = (md) => `<!DOCTYPE html>
         <tr><td style="padding:32px 36px 8px;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:15px;color:#d8d8d4">
           ${renderBlocks(md)}
         </td></tr>
-        <tr><td align="center" style="padding:6px 36px 34px">
+        <tr><td style="padding:4px 36px 26px">
+          <table role="presentation" cellpadding="0" cellspacing="0"><tr>
+            <td style="padding-right:14px">
+              <img src="https://kara.usegoblin.xyz/obi.jpg" width="46" height="46" alt="Obi" style="display:block;border-radius:50%;width:46px;height:46px;object-fit:cover"/>
+            </td>
+            <td style="font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;line-height:1.4">
+              <div style="font-size:14px;color:#f0efe9;font-weight:600">Obi</div>
+              <div style="font-size:12px;color:rgba(255,255,255,0.45)">Founder, Goblin Labs</div>
+            </td>
+          </tr></table>
+        </td></tr>
+        <tr><td align="center" style="padding:0 36px 34px">
           <a href="https://kara.usegoblin.xyz" style="display:inline-block;background:${ACCENT};color:#000;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:14px;font-weight:700;text-decoration:none;padding:13px 34px;border-radius:999px">Start building with Kara</a>
         </td></tr>
       </table>
@@ -114,7 +125,7 @@ const emails = rows.map((row) => ({
   reply_to: REPLY_TO,
   to: [row.email],
   subject: fill(subjectTpl, row),
-  text: fill(bodyTpl, row),
+  text: fill(bodyTpl, row) + '\n\nObi\nFounder, Goblin Labs',
   html: toHtml(fill(bodyTpl, row)),
 }));
 

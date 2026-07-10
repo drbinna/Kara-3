@@ -26,6 +26,3 @@ Your window: [TODO: dates]. Budget about 45 focused minutes.
 We're evaluating how you extract requirements, how you iterate, and the quality of what you ship, not how fast you finish.
 
 Reply to this email if anything's broken or unclear.
-
-Obi
-Goblin Labs
