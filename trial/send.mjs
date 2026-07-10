@@ -63,8 +63,50 @@ const rows = csv
 const fill = (tpl, row) =>
   tpl.replace(/\{\{(\w+)\}\}/g, (_, k) => row[k] || (k === 'name' ? 'there' : ''));
 
-const toHtml = (md) =>
-  md.split(/\n\s*\n/).map((p) => `<p style="margin:0 0 16px;line-height:1.6">${p.replace(/\n/g, '<br/>')}</p>`).join('\n');
+/* Branded shell — Goblin Labs dark editorial: dashed hairlines, green accent,
+ * Kara's portrait, one CTA. Table layout + inline styles for client safety.
+ * ALL-CAPS lines in the template render as small green section labels. */
+const ACCENT = '#22A03A';
+const renderBlocks = (md) =>
+  md.split(/\n\s*\n/).map((block) => {
+    const lines = block.split('\n').map((l) => {
+      const t = l.trim();
+      if (t.length > 2 && t.length < 40 && t === t.toUpperCase() && /[A-Z]/.test(t) && !/[a-z]/.test(t)) {
+        return `<div style="margin:26px 0 10px;font-size:11px;letter-spacing:2.5px;color:${ACCENT};font-weight:600">${t}</div>`;
+      }
+      return `${t}<br/>`;
+    });
+    const html = lines.join('').replace(/(<br\/>)+$/, '');
+    return html.startsWith('<div') ? html : `<p style="margin:0 0 18px;line-height:1.65;color:#d8d8d4">${html}</p>`;
+  }).join('\n');
+
+const toHtml = (md) => `<!DOCTYPE html>
+<html><body style="margin:0;padding:0;background:#050505">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#050505;padding:32px 12px"><tr><td align="center">
+  <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%">
+    <tr><td style="padding:0 0 22px" align="center">
+      <img src="https://kara.usegoblin.xyz/kara3-logo.png" width="150" alt="Kara 3 — Goblin Labs" style="display:block;max-width:150px"/>
+    </td></tr>
+    <tr><td style="border:1px dashed rgba(255,255,255,0.18);border-radius:16px;overflow:hidden;background:#0a0a0a">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+        <tr><td>
+          <img src="https://kara.usegoblin.xyz/cara.png" width="560" alt="Kara, your design partner" style="display:block;width:100%;height:auto"/>
+        </td></tr>
+        <tr><td style="padding:32px 36px 8px;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:15px;color:#d8d8d4">
+          ${renderBlocks(md)}
+        </td></tr>
+        <tr><td align="center" style="padding:6px 36px 34px">
+          <a href="https://kara.usegoblin.xyz" style="display:inline-block;background:${ACCENT};color:#000;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:14px;font-weight:700;text-decoration:none;padding:13px 34px;border-radius:999px">Start building with Kara</a>
+        </td></tr>
+      </table>
+    </td></tr>
+    <tr><td align="center" style="padding:22px 12px 0;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:11px;color:rgba(255,255,255,0.35);line-height:1.6">
+      Goblin Labs · agents that see, hear, talk and act<br/>
+      <a href="https://www.usegoblin.xyz" style="color:rgba(255,255,255,0.5)">usegoblin.xyz</a>
+    </td></tr>
+  </table>
+</td></tr></table>
+</body></html>`;
 
 /* --- send (batch endpoint takes up to 100; waves are ~50) --- */
 const emails = rows.map((row) => ({
