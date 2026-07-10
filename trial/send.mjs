@@ -119,6 +119,11 @@ const emails = rows.map((row) => ({
 }));
 
 console.log(`${LIVE ? 'SENDING' : 'DRY RUN'}: template=${templateName} recipients=${emails.length}`);
+const EMIT = flag('emit-html');
+if (EMIT && typeof EMIT === 'string') {
+  await fsp.writeFile(EMIT, emails[0].html);
+  console.log('wrote rendered HTML to', EMIT);
+}
 if (!LIVE) {
   console.log('--- first rendered email ---');
   console.log('To:', emails[0]?.to[0], '| Subject:', emails[0]?.subject);
