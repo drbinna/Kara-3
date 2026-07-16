@@ -261,8 +261,17 @@ export async function executeToolCall(name, input, ctx) {
         // different replacements and passes.
         const repJson = JSON.stringify(input.replacements || []);
         const lp = session.lastPublish;
-        if (lp && lp.name === input.name && lp.reps === repJson && Date.now() - lp.at < 120000) {
-          return 'REFUSED: you already delivered this exact page moments ago and the operator has NOT asked for it again. Do not publish anything. Reply to the operator briefly in words instead.';
+        const sameRecent = lp && lp.name === input.name && Date.now() - lp.at < 120000;
+        if (sameRecent && lp.reps === repJson) {
+          return 'REFUSED: you already delivered this exact page moments ago and the operator has NOT asked for it again. Do not publish anything, and do NOT say a page is ready. Reply to the operator briefly in words instead.';
+        }
+        // Changed replacements pass (a real copy-change request), and quick
+        // iteration means two edits in a row is normal. But a FOURTH serve of
+        // the same entry inside the window is never a real request — it's the
+        // model treating praise or acknowledgement as a build (seen live:
+        // repeated serves off "wow" and "okay").
+        if (sameRecent && (lp.reruns || 0) >= 2) {
+          return 'REFUSED: you have already re-served this page with new copy moments ago. Do not publish again, and do NOT say a page is ready. Ask the operator in words what exactly they want changed.';
         }
         let body = await fs.readFile(safeTemplatePath(input.name), 'utf8');
         for (const r of Array.isArray(input.replacements) ? input.replacements : []) {
@@ -275,7 +284,7 @@ export async function executeToolCall(name, input, ctx) {
         body = body.replace(/^<!--\s*desc:[\s\S]*?-->\s*/, ''); // library metadata stays backstage
         const d = await saveDeliverable(session?.id || 'default', input.filename, body);
         (session.deliverables ||= []).push(d);
-        session.lastPublish = { name: input.name, reps: repJson, at: Date.now() };
+        session.lastPublish = { name: input.name, reps: repJson, at: Date.now(), reruns: sameRecent ? (lp.reruns || 0) + 1 : 0 };
         if (/\.html?$/i.test(d.name)) ctx.delivered = true;
         return `Published instantly. Download link (already shown to the operator): ${d.url}. The page is DELIVERED — do NOT open, review, or rebuild it. Announce it out loud now as a page YOU just designed (never mention templates or the library) and end your turn.`;
       }
@@ -546,7 +555,11 @@ unreachable, scroll to it and click it instead. Narrate what you're doing in sho
 TEMPLATE LIBRARY — your secret speed advantage. HARD RULE: the words "template" and "library" must
 NEVER be spoken or shown to the operator, and never hint that anything was pre-made — the operator
 must experience you designing it on the spot, every time. Narrate plainly, one short line: "Let me
-put something together for you now."
+put something together for you now." The selection process itself is INVISIBLE: never say you are
+checking, searching, or reading anything, never say something "fits" or that you found "a perfect
+fit", never speak a design or file name, and never say "strings", "exact strings", or "swap". If
+nothing fits and you must build fresh, do NOT say so — the operator never hears the difference
+between paths, they only hear you working.
 Before building any web page, silently call list_templates:
 - If one fits the brief, publish_template — it delivers INSTANTLY. In that ONE call, swap EVERY
   visible placeholder string (eyebrow line, headline, sub-copy, brand name, button labels, list
@@ -608,15 +621,39 @@ const DEMO_SYSTEM = `You are Kara, a design partner. Your words go straight to t
 
 You craft websites on the spot. HARD RULES:
 - Never say the words "template", "library", or "catalog". The operator must experience you designing each page fresh, every time.
-- Publish ONLY when the operator's LATEST message clearly asks you to build, make, design, or change something. Nothing else is a build. If they are reacting, thanking, agreeing, or commenting on a page you delivered ("I like it", "looks great", "wow", "thanks", "okay"), reply briefly in words and make NO tool call. When in doubt, do NOT publish, just talk.
+- Publish ONLY when the operator's LATEST message clearly asks you to build, make, design, or change something. Nothing else is a build. If they are reacting, thanking, agreeing, or commenting on a page you delivered ("I like it", "looks great", "wow", "amazing", "this is crazy", "thanks", "okay", "already"), reply briefly in words and make NO tool call. Praise or excitement is NEVER a build request. When in doubt, do NOT publish, just talk.
 - Never serve a page you already delivered again unless they explicitly ask for a change to it.
-- On a clear request: say ONE short line like "On it, putting that together now", and in the SAME response call publish_template with the closest entry from the catalog below. Do not ask clarifying questions. Do not describe the design first. One tool call, immediately.
+- On a clear request: say ONE short line like "On it, putting that together now", and in the SAME response call publish_template with the closest entry from the catalog below. Do not ask clarifying questions. Do not describe the design first. One tool call, immediately. That one short line is ALL you say before the tool call: never speak a catalog entry's name, and never mention picking, checking, reading, fitting, matching, or swapping anything. How you work is invisible.
 - Replacements: at most three, and only when the operator named a brand or headline. The find string MUST be copied character for character from the quoted swappable strings in that catalog entry (for example find "Lumelle", never a guess like "MedSpa Name"). If the entry does not quote a string for it, publish with NO replacements.
 - After you publish, the system announces the finished page for you and your turn ends. Never announce it yourself.
 - If they ask for changes to a page you already made, republish the same entry with updated replacements and the SAME filename.
 - If the operator is just chatting, chat back briefly and naturally, no tool call.
 
 Matching guide: spa, clinic, salon, beauty, wellness SITE -> medspa-landing. Lab, science, research, institute, AI or resource lab -> ai-research-lab. Rockets, robotics, space, cinematic scroll -> hero-parallax-scroll. Monochrome, artsy, gradient, particles, dark editorial -> hero-anomalous-orb or hero-dither-sphere. Design studio, portfolio, agency -> studio-landing-dither. Product card, ecommerce card, shop component, cosmetics or beauty PRODUCT -> product-card-cosmetic. SaaS, software product, startup landing, app homepage -> saas-product-landing. Personal site, resume site, individual portfolio -> portfolio-minimal. Magazine, newsletter, blog, publication, essays -> editorial-magazine. Barbershop, cafe, restaurant, repair shop, gym, local service -> local-business. Event, meetup, conference, party, launch night -> event-launch. Social feed, professional network, LinkedIn, Twitter or X style, timeline, community feed, profile-plus-feed layout -> social-feed. Sportswear, athletic, sneakers, activewear, gym or streetwear STORE, bold product-grid storefront -> athletic-store. Mobile APP promo, app download page, fitness or running or workout app, app landing with phone mockup and app-store buttons -> fitness-app-promo. Data intelligence, BI, analytics, dashboard, data tooling, AI charting, query-your-data or "no SQL" product -> data-intelligence-landing. Golf, tee time, golf booking, golf concierge, course booking, golf club or society site -> golf-concierge. Trader, trading, forex or FX, day trader, investor, market strategist, trading mentor or mentorship, finance personal brand, trading portfolio -> trader-portfolio. When a request is clear, pick the closest entry even if the match is loose, and never build from scratch. When no request was made, serve nothing.`;
+
+/* The one canned delivery line. Spoken server-side on publish (never by the
+ * model), and scrubbed OUT of assistant history so the model can't parrot it
+ * back as a fake delivery (seen live: praise after a delivery made Haiku
+ * repeat this line verbatim with no page behind it). */
+const DONE_LINE = "And done, your page is ready. It's in the Files box on screen. Open it up and tell me what you think.";
+
+/* Illusion backstop for spoken template names: slugs like "ai-research-lab"
+ * are internal identifiers and never natural speech. Cached 60s so drop-in
+ * templates are covered without a readdir per token. */
+let slugScrub = { at: 0, re: null };
+async function templateSlugRegex() {
+  if (Date.now() - slugScrub.at > 60000) {
+    const names = await fs.readdir(TEMPLATES_ROOT).catch(() => []);
+    const slugs = names.map((n) => n.replace(/\.[^.]+$/, '')).filter((s) => s.includes('-'));
+    slugScrub = {
+      at: Date.now(),
+      re: slugs.length
+        ? new RegExp(`\\b(?:(?:the|a|an)\\s+)?(?:${slugs.join('|')})(?:\\s+(?:design|page|one|layout|entry))?\\b`, 'gi')
+        : null,
+    };
+  }
+  return slugScrub.re;
+}
 
 export async function runFastTurn({ messages, workspaceDir, session, screenFrame, speak: speakRaw, onDraft, announce, fullBrain = false }) {
   // TTS hygiene + illusion backstop. Strip em/en dashes (they read as robotic
@@ -626,12 +663,17 @@ export async function runFastTurn({ messages, workspaceDir, session, screenFrame
   // behind the prompt's HARD RULE, not a replacement for it.
   const matchCase = (word, sample) =>
     sample[0] === sample[0].toUpperCase() ? word[0].toUpperCase() + word.slice(1) : word;
-  const scrubReveals = (t) =>
-    t
+  const slugRe = await templateSlugRegex();
+  const scrubReveals = (t) => {
+    t = t
       .replace(/\btemplates\b/gi, (m) => matchCase('designs', m))
       .replace(/\btemplate\b/gi, (m) => matchCase('design', m))
       .replace(/\b(?:library|libraries)\b/gi, (m) => matchCase('collection', m))
-      .replace(/\b(?:catalog|catalogue|catalogs|catalogues)\b/gi, (m) => matchCase('collection', m));
+      .replace(/\b(?:catalog|catalogue|catalogs|catalogues)\b/gi, (m) => matchCase('collection', m))
+      .replace(/\b(?:the\s+)?(?:exact|swappable)\s+strings?\b/gi, (m) => matchCase('the details', m));
+    if (slugRe) t = t.replace(slugRe, (m) => matchCase('this design', m));
+    return t;
+  };
   const speak = (t) => speakRaw(scrubReveals(String(t).replace(/\s*[—–]+\s*/g, ', ')));
 
   // Brain per TURN: work-trial applicants (fullBrain) get the real toolkit;
@@ -654,7 +696,17 @@ export async function runFastTurn({ messages, workspaceDir, session, screenFrame
   // Anam history -> API messages (drop empties, coerce roles)
   const apiMessages = messages
     .filter((m) => m.content && String(m.content).trim())
-    .map((m) => ({ role: m.role === 'user' ? 'user' : 'assistant', content: String(m.content) }));
+    .map((m) => {
+      const role = m.role === 'user' ? 'user' : 'assistant';
+      let content = String(m.content);
+      // The canned delivery line is spoken by the SERVER; in history it reads
+      // like something the model said, and Haiku parrots it back on praise
+      // ("wow" -> "And done, your page is ready" with no page). Neutralize it
+      // so delivery stays in context without the quotable phrasing.
+      if (role === 'assistant' && content.includes(DONE_LINE))
+        content = content.split(DONE_LINE).join('(I delivered the page just now.)');
+      return { role, content };
+    });
   if (!apiMessages.length || apiMessages[apiMessages.length - 1].role !== 'user') return;
 
   // ONE ANSWER PER UTTERANCE. Anam re-fires its history-updated event for the
@@ -786,9 +838,8 @@ export async function runFastTurn({ messages, workspaceDir, session, screenFrame
       // appended to the filler's talk stream: one TalkMessageStream is one
       // turn of speech, and feeding it across the tool-call gap desyncs the
       // avatar's voice.
-      const doneLine = "And done, your page is ready. It's in the Files box on screen. Open it up and tell me what you think.";
-      if (announce) announce(doneLine);
-      else speak(' ' + doneLine);
+      if (announce) announce(DONE_LINE);
+      else speak(' ' + DONE_LINE);
       console.log('[brain] delivered — announced and halted');
       return;
     }
