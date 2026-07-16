@@ -580,7 +580,11 @@ async function handleUserMessage(messageHistory) {
   }));
 
   try {
-    const talkStream = anamClient.createTalkMessageStream();
+    // One TalkMessageStream = one speech turn. An announce (delivery line or
+    // mid-build progress filler) closes the current stream; if the model
+    // speaks again afterwards, we open a FRESH stream for it — never resume
+    // the old one across a gap (that desyncs the avatar's voice and lips).
+    let talkStream = anamClient.createTalkMessageStream();
 
     const response = await fetch('/api/chat-stream', {
       method: 'POST',
@@ -618,7 +622,8 @@ async function handleUserMessage(messageHistory) {
             else if (obj.control.draft) showDraft(obj.control.draft);
             else if (obj.control.deliverable) addDeliverable(obj.control.deliverable);
             else updateBanner(obj.control); // UI only — never spoken
-          } else if (obj.content && talkStream.isActive()) {
+          } else if (obj.content) {
+            if (!talkStream.isActive()) talkStream = anamClient.createTalkMessageStream();
             talkStream.streamMessageChunk(obj.content, false);
           }
         } catch {

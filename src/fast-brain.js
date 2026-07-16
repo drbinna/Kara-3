@@ -637,6 +637,17 @@ Matching guide: spa, clinic, salon, beauty, wellness SITE -> medspa-landing. Lab
  * repeat this line verbatim with no page behind it). */
 const DONE_LINE = "And done, your page is ready. It's in the Files box on screen. Open it up and tell me what you think.";
 
+/* Dead-air fillers: a from-scratch page is one long tool_use generation with
+ * zero text deltas, so the avatar sat silent for minutes (a live operator:
+ * "when I'm not talking, she's just staring at me and breathing"). Spoken in
+ * order, each as its OWN talk turn, then silence — never looped. */
+const BUILD_FILLERS = [
+  "Still here, just writing your page. It takes a moment when it's a big one.",
+  "Still building, the layout is coming together.",
+  "Almost done now, wrapping up the last sections.",
+  "Just a little longer, finishing the details.",
+];
+
 /* Illusion backstop for spoken template names: slugs like "ai-research-lab"
  * are internal identifiers and never natural speech. Cached 60s so drop-in
  * templates are covered without a readdir per token. */
@@ -750,10 +761,27 @@ export async function runFastTurn({ messages, workspaceDir, session, screenFrame
   // one final tool-less step speaks the announcement, then the turn is over.
   const ctx = { workspaceDir, session, delivered: false };
 
+  // Dead-air watchdog state (turn-scoped so fillers never repeat across
+  // rounds). While a model step generates a long tool call there are no text
+  // deltas and the avatar goes mute; after enough silence we speak the next
+  // progress line via announce — its own talk turn, NEVER the open stream
+  // (a gap mid-stream desyncs the avatar's voice and lips). Delay grows each
+  // time (18s, 26s, 34s, 42s), then she simply works in silence.
+  let lastVoiceAt = Date.now();
+  let fillerIdx = 0;
+
   for (let round = 0; round < MAX_TOOL_ROUNDS; round++) {
     const roundStart = Date.now();
     let firstTokenAt = 0;
     let contentBlocks, stopReason;
+    const watchdog = announce
+      ? setInterval(() => {
+          if (stale() || ctx.delivered || fillerIdx >= BUILD_FILLERS.length) return;
+          if (Date.now() - lastVoiceAt < 18000 + fillerIdx * 8000) return;
+          announce(BUILD_FILLERS[fillerIdx++]);
+          lastVoiceAt = Date.now();
+        }, 3000)
+      : null;
     try {
       ({ contentBlocks, stopReason } = await streamModelStep({
         system,
@@ -766,6 +794,7 @@ export async function runFastTurn({ messages, workspaceDir, session, screenFrame
             firstTokenAt = Date.now();
             console.log(`[timing] round ${round}: first spoken token +${firstTokenAt - roundStart}ms`);
           }
+          lastVoiceAt = Date.now();
           if (!stale()) speak(t);
         },
         onDraft,
@@ -776,6 +805,8 @@ export async function runFastTurn({ messages, workspaceDir, session, screenFrame
         return;
       }
       throw err;
+    } finally {
+      if (watchdog) clearInterval(watchdog);
     }
     if (stale()) {
       console.log('[brain] turn superseded — dropping pending tool calls');
@@ -789,6 +820,14 @@ export async function runFastTurn({ messages, workspaceDir, session, screenFrame
     if (truncated) {
       // She was cut off mid-answer or mid-tool-call. Don't die silently:
       // drop the broken tool calls and tell her to retry more concisely.
+      // The retry is another long silent generation and the watchdog's
+      // fillers may be spent, so speak one honest line now and refund two
+      // filler slots to cover the retry.
+      if (announce && !stale()) {
+        announce('This one is taking me a little longer than usual, thanks for bearing with me.');
+        lastVoiceAt = Date.now();
+        fillerIdx = Math.min(fillerIdx, BUILD_FILLERS.length - 2);
+      }
       console.warn('[brain] response truncated (max_tokens) — asking model to retry concisely');
       apiMessages.push({
         role: 'assistant',
