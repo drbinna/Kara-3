@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { query } from '@anthropic-ai/claude-agent-sdk';
 import { dataServer, DATA_TOOL_NAMES } from './src/mcp-tools.js';
 import { getSession } from './src/sessions.js';
+import { listProjects } from './src/projects.js';
 import { startResearchJob } from './src/research.js';
 import { runFastTurn } from './src/fast-brain.js';
 import { warmBrowser } from './src/browser-tools.js';
@@ -154,6 +155,14 @@ app.get('/api/deliverables', async (req, res) => {
   }
 });
 
+/* Cross-session project history for the signed-in user (Chinedu's feature
+ * request): every page Kara publishes is indexed per user in
+ * deliverables/_projects/, so returning users can see what they've built. */
+app.get('/api/projects', requireAuth, async (req, res) => {
+  const uid = req.userId || (authRequired ? null : 'dev');
+  res.json({ projects: await listProjects(uid) });
+});
+
 /* ------------------------------------------------------------------ *
  * PERMISSIONS (agent path) — read-only tools only.
  * ------------------------------------------------------------------ */
@@ -179,6 +188,7 @@ app.post('/api/chat-stream', requireAuth, async (req, res) => {
   const { messages = [], conversationId, screenFrame } = req.body;
   const session = getSession(conversationId);
   if (req.userId) session.userId = req.userId; // ties transcripts to the applicant
+  else if (!authRequired) session.userId = 'dev'; // local dev: project history still works
   // Work-trial applicants get the full brain for this turn; everyone else the
   // demo brain. Resolved per request (cached in-process) so the allowlist can
   // change mid-flight without a restart.

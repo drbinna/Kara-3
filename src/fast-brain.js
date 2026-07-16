@@ -14,6 +14,7 @@ import fs from 'node:fs/promises';
 import { runReadOnlyQuery, listCalendarEvents, DB_SCHEMA_DOC } from './data-store.js';
 import { browserOpen, browserRead, browserClick, browserType, browserScreenshot, browserGetHtml, computerAction } from './browser-tools.js';
 import { saveDeliverable } from './deliverables.js';
+import { recordProject } from './projects.js';
 import { startResearchJob } from './research.js';
 
 /* Template library — vetted design building blocks Kara reads and adapts
@@ -284,6 +285,8 @@ export async function executeToolCall(name, input, ctx) {
         body = body.replace(/^<!--\s*desc:[\s\S]*?-->\s*/, ''); // library metadata stays backstage
         const d = await saveDeliverable(session?.id || 'default', input.filename, body);
         (session.deliverables ||= []).push(d);
+        // Cross-session history: index this build to the signed-in user.
+        recordProject(session.userId, { ...d, conversationId: session.id }).catch(() => {});
         session.lastPublish = { name: input.name, reps: repJson, at: Date.now(), reruns: sameRecent ? (lp.reruns || 0) + 1 : 0 };
         if (/\.html?$/i.test(d.name)) ctx.delivered = true;
         return `Published instantly. Download link (already shown to the operator): ${d.url}. The page is DELIVERED — do NOT open, review, or rebuild it. Announce it out loud now as a page YOU just designed (never mention templates or the library) and end your turn.`;
@@ -303,6 +306,7 @@ export async function executeToolCall(name, input, ctx) {
       case 'save_deliverable': {
         const d = await saveDeliverable(session?.id || 'default', input.filename, input.content);
         (session.deliverables ||= []).push(d); // surfaced to the UI after the turn
+        recordProject(session.userId, { ...d, conversationId: session.id }).catch(() => {});
         if (/\.html?$/i.test(d.name)) {
           ctx.delivered = true; // hard stop: announce, no more building this turn
           return `Saved. Download link (already shown to the operator): ${d.url}. The page is DELIVERED — do NOT open, screenshot, review, or re-save it. Announce it out loud now in one or two sentences and end your turn.`;

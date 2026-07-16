@@ -352,7 +352,17 @@ const filesWidget = (() => {
   hr.className = 'fb-hr';
   const list = document.createElement('div');
   list.className = 'fb-list';
-  card.append(head, hr, list);
+  // "From your past sessions" — cross-session history (Chinedu's request).
+  // Hidden until /api/projects returns something for this user.
+  const pastHr = document.createElement('hr');
+  pastHr.className = 'fb-hr';
+  const pastLabel = document.createElement('div');
+  pastLabel.className = 'fb-empty';
+  pastLabel.textContent = 'From your past sessions';
+  const pastList = document.createElement('div');
+  pastList.className = 'fb-list';
+  pastHr.style.display = pastLabel.style.display = 'none';
+  card.append(head, hr, list, pastHr, pastLabel, pastList);
 
   const panel = makeFoil(document, window, card,
     'display:none; margin-bottom:8px; border-radius:12px; box-shadow:0 12px 34px rgba(0,0,0,0.5);', true);
@@ -413,9 +423,33 @@ const filesWidget = (() => {
       if (remote) return; // the companion already shows it live
       panel.style.display = 'block'; // surface the new file immediately
     },
+    setPast(items) {
+      // Don't repeat files already sitting in this session's list.
+      const current = new Set(files.map((f) => f.url));
+      const past = (items || []).filter((p) => !current.has(p.url));
+      const show = past.length ? '' : 'none';
+      pastHr.style.display = pastLabel.style.display = show;
+      pastList.replaceChildren(...past.map((p, i) => {
+        const a = linkEl(document, p, i);
+        if (p.savedAt) a.title = `Built ${new Date(p.savedAt).toLocaleDateString()}`;
+        a.style.opacity = '.75';
+        return a;
+      }));
+    },
     mirrorInto(el) { remote = el; render(); },
     unmirror() { remote = null; },
   };
+})();
+
+/* Cross-session project history: pull the signed-in user's past builds into
+ * the Files box. Fire-and-forget on load; harmless 401/empty when signed out. */
+(async function loadPastBuilds() {
+  try {
+    const r = await fetch('/api/projects', { headers: await authHeaders() });
+    if (!r.ok) return;
+    const { projects } = await r.json();
+    if (projects?.length) filesWidget.setPast(projects);
+  } catch { /* offline or signed out — the box just shows this session */ }
 })();
 
 /* --------------------------- live document panel ------------------------ */
