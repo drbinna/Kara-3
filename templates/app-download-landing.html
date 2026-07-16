@@ -1,0 +1,429 @@
+<!-- desc: Complete light app-marketing SITE (Pocket/Tailwind style, Inter, cyan accent): hero with CSS iPhone mockup showing live app UI over concentric rings, app-store buttons, press logo row, dark feature band with second phone (leaderboard) + 3 features, 3x2 feature card grid, black CTA band, reviews masonry wall, 3-tier pricing (dark VIP card), 3-col FAQ, footer QR download card. All CSS/SVG, no external images. Swappable strings: brand "Pace", headline "Run at your perfect pace.", pace stat "5:12", plan prices "$0" / "$4" / "$9", plan names "Starter" / "Pacer" / "Elite", CTA "Get your first run in today". -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pace — Run at your perfect pace.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0f172a;
+    --gray:#64748b;
+    --light:#f8fafc;
+    --line:#e2e8f0;
+    --cyan:#06b6d4;
+    --cyan-bright:#22d3ee;
+    --black:#0a0a0a;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    background:#fff;color:var(--ink);
+    font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased;
+  }
+  a{text-decoration:none;color:inherit}
+  .wrap{max-width:1120px;margin:0 auto;padding:0 32px}
+
+  nav{display:flex;align-items:center;justify-content:space-between;height:72px}
+  .logo{display:flex;align-items:center;gap:9px;font-weight:600;font-size:16px}
+  .logo .mark{
+    width:26px;height:26px;border-radius:50%;
+    background:conic-gradient(from 200deg,var(--cyan) 0 55%,var(--ink) 55% 100%);
+  }
+  .nav-links{display:flex;gap:26px;font-size:14px;color:var(--gray)}
+  .nav-links a:hover{color:var(--ink)}
+  .nav-cta{display:flex;gap:10px;align-items:center}
+  .btn{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:9px 18px;border-radius:99px;font-size:14px;font-weight:500;transition:opacity .2s;
+  }
+  .btn:hover{opacity:.85}
+  .btn-outline{border:1px solid var(--line);color:var(--ink)}
+  .btn-dark{background:var(--ink);color:#fff}
+  .btn-store{background:var(--black);color:#fff;padding:10px 20px}
+  .btn-store small{display:block;font-size:10px;font-weight:400;opacity:.75;line-height:1.1;text-align:left}
+  .btn-store b{font-size:14px;line-height:1.15;display:block;text-align:left}
+
+  .hero{position:relative;overflow:hidden;padding:64px 0 96px}
+  .hero-grid{display:grid;grid-template-columns:1.05fr 1fr;gap:40px;align-items:center}
+  h1{font-size:42px;font-weight:500;letter-spacing:-.01em;line-height:1.15}
+  .hero p.sub{margin-top:18px;color:var(--gray);font-size:16.5px;max-width:42ch}
+  .hero-cta{margin-top:30px;display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+  .watch{display:inline-flex;align-items:center;gap:9px;font-size:14px;font-weight:500;border:1px solid var(--line);padding:10px 20px;border-radius:99px}
+  .watch .play{width:20px;height:20px;border-radius:50%;background:var(--cyan);display:grid;place-items:center;color:#fff;font-size:9px}
+
+  .phone-zone{position:relative;display:grid;place-items:center;min-height:520px}
+  .rings{position:absolute;inset:0;display:grid;place-items:center}
+  .rings i{position:absolute;border:1px solid #e6edf3;border-radius:50%}
+  .rings i:nth-child(1){width:340px;height:340px}
+  .rings i:nth-child(2){width:480px;height:480px}
+  .rings i:nth-child(3){width:620px;height:620px}
+  .phone{
+    position:relative;width:270px;height:548px;border-radius:44px;background:var(--black);
+    padding:10px;box-shadow:0 30px 60px rgba(15,23,42,.18);
+  }
+  .phone .screen{
+    width:100%;height:100%;border-radius:36px;overflow:hidden;background:#fff;
+    display:flex;flex-direction:column;
+  }
+  .notch{position:absolute;top:10px;left:50%;transform:translateX(-50%);width:110px;height:26px;background:var(--black);border-radius:0 0 16px 16px;z-index:3}
+  .app-head{padding:38px 18px 12px;display:flex;justify-content:space-between;align-items:center}
+  .app-head .t{font-weight:600;font-size:13px;display:flex;align-items:center;gap:6px}
+  .app-head .t .mark{width:16px;height:16px;border-radius:50%;background:conic-gradient(from 200deg,var(--cyan) 0 55%,var(--ink) 55% 100%)}
+  .run-map{
+    height:150px;margin:0 14px;border-radius:14px;position:relative;overflow:hidden;
+    background:
+      radial-gradient(120px 60px at 20% 30%,rgba(6,182,212,.14),transparent),
+      radial-gradient(140px 80px at 80% 70%,rgba(6,182,212,.10),transparent),
+      linear-gradient(140deg,#eef4f8,#e2ecf2);
+  }
+  .run-map svg{position:absolute;inset:0}
+  .big-stat{text-align:center;padding:18px 0 6px}
+  .big-stat .n{font-size:44px;font-weight:700;letter-spacing:-.02em}
+  .big-stat .n small{font-size:15px;color:var(--gray);font-weight:500}
+  .big-stat .l{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--gray)}
+  .mini-stats{display:flex;justify-content:space-around;padding:12px 16px}
+  .mini-stats .s{text-align:center}
+  .mini-stats .n{font-weight:600;font-size:15px}
+  .mini-stats .l{font-size:10px;color:var(--gray);text-transform:uppercase;letter-spacing:.08em}
+  .go{
+    margin:auto 16px 16px;background:var(--cyan);color:#fff;text-align:center;
+    padding:13px;border-radius:12px;font-weight:600;font-size:14px;
+  }
+
+  .press{border-top:1px solid var(--line);padding:34px 0 40px}
+  .press .cap{font-size:13px;color:var(--gray);margin-bottom:18px}
+  .press .row{display:flex;gap:40px;flex-wrap:wrap;align-items:center;color:#94a3b8;font-weight:700;font-size:17px;letter-spacing:-.01em}
+
+  .dark{background:var(--black);color:#fff;padding:96px 0}
+  .dark h2{font-size:30px;font-weight:500;text-align:center}
+  .dark .lede{text-align:center;color:#94a3b8;max-width:56ch;margin:14px auto 60px;font-size:15px}
+  .feat-grid{display:grid;grid-template-columns:300px 1fr;gap:70px;align-items:center}
+  .phone.small{width:230px;height:466px;margin:0 auto;box-shadow:0 30px 60px rgba(0,0,0,.5)}
+  .phone.small .screen{background:#0f172a;color:#fff}
+  .crew-list{padding:40px 14px 0}
+  .crew-list .row{display:flex;align-items:center;gap:10px;padding:9px 8px;border-radius:10px;background:rgba(255,255,255,.04);margin-bottom:8px}
+  .crew-list .av{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-size:10px;font-weight:700;color:#fff}
+  .crew-list .nm{font-size:12px;font-weight:600}
+  .crew-list .km{margin-left:auto;font-size:11px;color:#94a3b8}
+  .flist{display:flex;flex-direction:column;gap:8px}
+  .fitem{padding:24px 26px;border-radius:14px}
+  .fitem.hi{background:#17181c}
+  .fitem h3{font-size:15px;font-weight:600;display:flex;align-items:center;gap:10px;margin-bottom:8px}
+  .fitem h3 .ic{width:26px;height:26px;border-radius:8px;background:rgba(34,211,238,.14);display:grid;place-items:center;font-size:13px}
+  .fitem p{font-size:14px;color:#94a3b8;max-width:52ch}
+
+  .grid-sec{padding:96px 0}
+  .grid-sec h2{font-size:30px;font-weight:500;text-align:center}
+  .grid-sec .lede{text-align:center;color:var(--gray);max-width:52ch;margin:14px auto 52px}
+  .cards6{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  .c6{background:var(--light);border-radius:14px;padding:28px 26px}
+  .c6 .ic{font-size:20px;margin-bottom:36px;display:block}
+  .c6 h3{font-size:15px;font-weight:600;margin-bottom:8px}
+  .c6 p{font-size:13.5px;color:var(--gray)}
+
+  .cta-band{background:var(--black);color:#fff;text-align:center;padding:90px 24px}
+  .cta-band h2{font-size:30px;font-weight:500}
+  .cta-band p{color:#94a3b8;max-width:46ch;margin:14px auto 30px;font-size:15px}
+
+  .reviews{padding:96px 0}
+  .reviews h2{font-size:30px;font-weight:500;text-align:center}
+  .reviews .lede{text-align:center;color:var(--gray);margin:14px auto 52px}
+  .rev-grid{columns:3;column-gap:18px}
+  .rev{
+    break-inside:avoid;background:#fff;border:1px solid var(--line);border-radius:14px;
+    padding:22px 24px;margin-bottom:18px;box-shadow:0 4px 14px rgba(15,23,42,.04);
+  }
+  .rev .stars{color:var(--cyan);font-size:12px;letter-spacing:2px;margin-bottom:10px}
+  .rev h4{font-size:14px;font-weight:600;margin-bottom:6px}
+  .rev p{font-size:13.5px;color:var(--gray)}
+  .rev .who{margin-top:12px;font-size:12px;color:#94a3b8}
+
+  .pricing{background:var(--light);padding:96px 0}
+  .pricing h2{font-size:30px;font-weight:500;text-align:center}
+  .pricing .lede{text-align:center;color:var(--gray);margin:14px auto 52px}
+  .plans{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;align-items:stretch}
+  .plan{background:#fff;border:1px solid var(--line);border-radius:18px;padding:32px 30px;display:flex;flex-direction:column}
+  .plan.vip{background:var(--black);color:#fff;border-color:var(--black)}
+  .plan .name{font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px}
+  .plan .name .dot{width:18px;height:18px;border-radius:50%;background:conic-gradient(from 200deg,var(--cyan) 0 55%,#cbd5e1 55% 100%)}
+  .plan .price{font-size:38px;font-weight:700;margin:14px 0 4px}
+  .plan .price small{font-size:14px;font-weight:500;color:var(--gray)}
+  .plan.vip .price small{color:#94a3b8}
+  .plan .desc{font-size:13.5px;color:var(--gray);margin-bottom:20px}
+  .plan.vip .desc{color:#94a3b8}
+  .plan .go-btn{display:block;text-align:center;border-radius:99px;padding:11px;font-size:14px;font-weight:600;margin-bottom:22px}
+  .plan .go-btn.dark{background:var(--ink);color:#fff}
+  .plan .go-btn.cyan{background:var(--cyan);color:#fff}
+  .plan ul{list-style:none;display:flex;flex-direction:column;gap:10px;font-size:13.5px;color:var(--gray)}
+  .plan.vip ul{color:#cbd5e1}
+  .plan ul li::before{content:"✓";color:var(--cyan);font-weight:700;margin-right:9px}
+
+  .faq{padding:96px 0}
+  .faq h2{font-size:30px;font-weight:500}
+  .faq .lede{color:var(--gray);margin:10px 0 48px}
+  .faq-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:40px 44px}
+  .q h4{font-size:14.5px;font-weight:600;margin-bottom:8px}
+  .q p{font-size:13.5px;color:var(--gray)}
+
+  footer{border-top:1px solid var(--line);padding:48px 0 32px}
+  .foot-grid{display:flex;justify-content:space-between;gap:32px;flex-wrap:wrap;align-items:center}
+  .dl-card{
+    display:flex;align-items:center;gap:16px;border:1px solid var(--line);border-radius:14px;padding:16px 20px;
+  }
+  .qr{
+    width:64px;height:64px;border-radius:8px;
+    background:
+      repeating-linear-gradient(0deg,var(--ink) 0 4px,transparent 4px 8px),
+      repeating-linear-gradient(90deg,var(--ink) 0 4px,#fff 4px 8px);
+  }
+  .dl-card .t{font-size:13.5px;font-weight:600}
+  .dl-card .s{font-size:12.5px;color:var(--gray)}
+  .copy-row{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-top:36px;font-size:13px;color:var(--gray)}
+
+  @media(max-width:900px){
+    .nav-links{display:none}
+    .hero-grid,.feat-grid{grid-template-columns:1fr}
+    .cards6,.plans,.faq-grid{grid-template-columns:1fr}
+    .rev-grid{columns:1}
+    h1{font-size:34px}
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <nav>
+    <a class="logo" href="#top"><span class="mark"></span>Pace</a>
+    <div class="nav-links">
+      <a href="#features">Features</a>
+      <a href="#reviews">Reviews</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#faq">FAQs</a>
+    </div>
+    <div class="nav-cta">
+      <a class="btn btn-outline" href="#">Log in</a>
+      <a class="btn btn-dark" href="#pricing">Download</a>
+    </div>
+  </nav>
+</div>
+
+<header class="hero" id="top">
+  <div class="wrap hero-grid">
+    <div>
+      <h1>Run at your perfect pace.</h1>
+      <p class="sub">Pace tracks every run, coaches you through your splits in real time, and keeps your crew pushing each other. Whether you're chasing a first 5K or a marathon PB, Pace makes every kilometer count.</p>
+      <div class="hero-cta">
+        <a class="btn btn-store" href="#">
+          <span style="font-size:20px;">&#63743;</span>
+          <span><small>Download on the</small><b>App Store</b></span>
+        </a>
+        <a class="watch" href="#"><span class="play">&#9654;</span>Watch the video</a>
+      </div>
+    </div>
+    <div class="phone-zone">
+      <div class="rings"><i></i><i></i><i></i></div>
+      <div class="phone">
+        <div class="notch"></div>
+        <div class="screen">
+          <div class="app-head">
+            <span class="t"><span class="mark"></span>Pace</span>
+            <span style="font-size:11px;color:#94a3b8;">Tue · Morning Run</span>
+          </div>
+          <div class="run-map">
+            <svg viewBox="0 0 242 150">
+              <path d="M18 118 C50 96 44 66 78 62 S130 84 154 64 200 30 224 40" fill="none" stroke="#06b6d4" stroke-width="3.5" stroke-linecap="round"/>
+              <circle cx="18" cy="118" r="5" fill="#0f172a"/>
+              <circle cx="224" cy="40" r="6" fill="#06b6d4"/>
+              <circle cx="224" cy="40" r="10" fill="#06b6d4" opacity=".25"/>
+            </svg>
+          </div>
+          <div class="big-stat">
+            <div class="n">5:12<small> /km</small></div>
+            <div class="l">Current pace</div>
+          </div>
+          <div class="mini-stats">
+            <div class="s"><div class="n">7.4</div><div class="l">km</div></div>
+            <div class="s"><div class="n">38:24</div><div class="l">time</div></div>
+            <div class="s"><div class="n">152</div><div class="l">bpm</div></div>
+          </div>
+          <div class="go">Pause Run</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="press">
+  <div class="wrap">
+    <div class="cap">As featured in</div>
+    <div class="row">
+      <span>Runner's World</span><span>Outside</span><span>ESPN</span><span>Men's Health</span><span>SELF</span>
+    </div>
+  </div>
+</div>
+
+<section class="dark" id="features">
+  <div class="wrap">
+    <h2>Every feature you need to go further. Try it for yourself.</h2>
+    <p class="lede">Pace was built for runners who play by their own rules and don't want a coach shouting from a spreadsheet. If other running apps are afraid to build it, Pace has it.</p>
+    <div class="feat-grid">
+      <div class="phone small">
+        <div class="notch"></div>
+        <div class="screen">
+          <div class="app-head" style="color:#fff;">
+            <span class="t" style="color:#fff;"><span class="mark"></span>Crew</span>
+            <span style="font-size:11px;color:#64748b;">This week</span>
+          </div>
+          <div class="crew-list">
+            <div class="row"><span class="av" style="background:#06b6d4;">TC</span><span class="nm">Tatenda C.</span><span class="km">42.3 km</span></div>
+            <div class="row"><span class="av" style="background:#818cf8;">RM</span><span class="nm">Rudo M.</span><span class="km">38.9 km</span></div>
+            <div class="row"><span class="av" style="background:#f472b6;">KD</span><span class="nm">Kuda D.</span><span class="km">31.2 km</span></div>
+            <div class="row"><span class="av" style="background:#34d399;">TN</span><span class="nm">Tino N.</span><span class="km">27.6 km</span></div>
+            <div class="row"><span class="av" style="background:#fbbf24;">FM</span><span class="nm">Farai M.</span><span class="km">19.8 km</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="flist">
+        <div class="fitem hi">
+          <h3><span class="ic">👟</span>Crew challenges</h3>
+          <p>Start a weekly distance battle with your running crew. Everyone sees the leaderboard update live, and nobody wants to be bottom on Sunday night.</p>
+        </div>
+        <div class="fitem">
+          <h3><span class="ic">📣</span>Live pace coach</h3>
+          <p>Set a target pace and Pace talks you through your splits in your headphones, nudging you when you drift and celebrating when you negative-split.</p>
+        </div>
+        <div class="fitem">
+          <h3><span class="ic">🗺️</span>Route heatmaps</h3>
+          <p>See where your city actually runs. Find the loops locals love, the quiet sunrise routes, and the hills worth hating.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="grid-sec">
+  <div class="wrap">
+    <h2>Now is the time to chase your PB.</h2>
+    <p class="lede">With consistent training, every runner improves. With Pace, it's never too late to surprise yourself.</p>
+    <div class="cards6">
+      <div class="c6"><span class="ic">📍</span><h3>GPS route tracking</h3><p>Accurate maps of every run, with elevation, splits, and weather logged automatically.</p></div>
+      <div class="c6"><span class="ic">⏱️</span><h3>Pace zones</h3><p>Train smarter with personal easy, tempo, and race zones that adapt as you get fitter.</p></div>
+      <div class="c6"><span class="ic">❤️</span><h3>Heart-rate insights</h3><p>Pair any watch or strap. Pace shows you effort, not just speed, so easy days stay easy.</p></div>
+      <div class="c6"><span class="ic">🏅</span><h3>Segments and PBs</h3><p>Every local segment, every personal best, tracked and celebrated the moment you cross it.</p></div>
+      <div class="c6"><span class="ic">👥</span><h3>Crew leaderboards</h3><p>Friendly rivalry keeps streaks alive. Weekly totals, longest run, fastest 5K, all in one board.</p></div>
+      <div class="c6"><span class="ic">😴</span><h3>Recovery signals</h3><p>Pace reads your training load and tells you when to push and when a rest day earns you more.</p></div>
+    </div>
+  </div>
+</section>
+
+<div class="cta-band">
+  <h2>Get your first run in today</h2>
+  <p>It takes 30 seconds to sign up. Download the app, lace up, and Pace will have your first guided run ready before you reach the door.</p>
+  <a class="btn btn-store" style="background:#fff;color:#0a0a0a;" href="#">
+    <span style="font-size:20px;">&#63743;</span>
+    <span><small style="opacity:.6;">Download on the</small><b>App Store</b></span>
+  </a>
+</div>
+
+<section class="reviews" id="reviews">
+  <div class="wrap">
+    <h2>Everyone is running further with Pace.</h2>
+    <p class="lede">Thousands of runners have set a new personal best in the last 30 days.</p>
+    <div class="rev-grid">
+      <div class="rev"><div class="stars">★★★★★</div><h4>Best running app, period.</h4><p>The live pace coach is like having a friend on the run who actually knows what they're doing.</p><div class="who">Amara O. · Lagos</div></div>
+      <div class="rev"><div class="stars">★★★★★</div><h4>My crew is obsessed</h4><p>Five of us started a weekly challenge in January. We've all PB'd since. Nobody wants to be last on the board.</p><div class="who">Kuda D. · Harare</div></div>
+      <div class="rev"><div class="stars">★★★★★</div><h4>From couch to half marathon</h4><p>The pace zones kept me from burning out in week two like every other time I tried to start running.</p><div class="who">Jess T. · London</div></div>
+      <div class="rev"><div class="stars">★★★★★</div><h4>Finally, effort over ego</h4><p>Heart-rate insights taught me to slow down on easy days. My tempo runs got faster within a month.</p><div class="who">Marcus B. · Austin</div></div>
+      <div class="rev"><div class="stars">★★★★★</div><h4>The heatmaps are gold</h4><p>Moved to a new city and found my favorite sunrise loop in the first week. Would never have found it alone.</p><div class="who">Priya S. · Toronto</div></div>
+      <div class="rev"><div class="stars">★★★★★</div><h4>Recovery signals work</h4><p>It told me to rest two days before my 10K. I hated it. Then I ran my best time ever.</p><div class="who">Tomas E. · Berlin</div></div>
+    </div>
+  </div>
+</section>
+
+<section class="pricing" id="pricing">
+  <div class="wrap">
+    <h2>Simple pricing, no lock-in.</h2>
+    <p class="lede">Whether you run twice a week or twice a day, there's a plan that fits.</p>
+    <div class="plans">
+      <div class="plan">
+        <div class="name"><span class="dot"></span>Starter</div>
+        <div class="price">$0</div>
+        <div class="desc">Everything you need to start running and stay consistent.</div>
+        <a class="go-btn dark" href="#">Get started for free</a>
+        <ul>
+          <li>Unlimited GPS run tracking</li>
+          <li>Splits, elevation, and history</li>
+          <li>One crew challenge at a time</li>
+          <li>Community routes</li>
+        </ul>
+      </div>
+      <div class="plan">
+        <div class="name"><span class="dot"></span>Pacer</div>
+        <div class="price">$4<small> /month</small></div>
+        <div class="desc">For runners chasing a number, with coaching in your ear.</div>
+        <a class="go-btn cyan" href="#">Start free trial</a>
+        <ul>
+          <li>Everything in Starter</li>
+          <li>Live pace coach</li>
+          <li>Personal pace and HR zones</li>
+          <li>Unlimited crew challenges</li>
+          <li>Segments and PB tracking</li>
+        </ul>
+      </div>
+      <div class="plan vip">
+        <div class="name" style="color:#fff;"><span class="dot"></span>Elite</div>
+        <div class="price">$9<small> /month</small></div>
+        <div class="desc">Serious training tools for race day and beyond.</div>
+        <a class="go-btn cyan" href="#">Go Elite</a>
+        <ul>
+          <li>Everything in Pacer</li>
+          <li>Adaptive training plans</li>
+          <li>Recovery and load signals</li>
+          <li>Route heatmaps</li>
+          <li>Race-day pacing strategies</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="faq" id="faq">
+  <div class="wrap">
+    <h2>Frequently asked questions</h2>
+    <p class="lede">If you have anything else you want to ask, reach out to us.</p>
+    <div class="faq-grid">
+      <div class="q"><h4>Does Pace work with my watch?</h4><p>Yes. Pace pairs with Apple Watch, Garmin, Coros, and any Bluetooth heart-rate strap.</p></div>
+      <div class="q"><h4>Do I need to run fast to use it?</h4><p>Not at all. Pace is built for recreational runners first. Your easy pace is the whole point.</p></div>
+      <div class="q"><h4>How do crew challenges work?</h4><p>Invite friends, pick a weekly goal, and the leaderboard updates live after every run.</p></div>
+      <div class="q"><h4>Does it work offline?</h4><p>Runs record fully offline and sync when you're back on a network. Music keeps playing.</p></div>
+      <div class="q"><h4>Can I import my old runs?</h4><p>Yes, bring your full history from Strava, Nike Run Club, or a GPX export in one tap.</p></div>
+      <div class="q"><h4>What about battery life?</h4><p>A 60-minute run uses about 4 percent battery with GPS and the pace coach on.</p></div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="foot-grid">
+      <a class="logo" href="#top"><span class="mark"></span>Pace<span style="font-size:12px;color:var(--gray);font-weight:400;margin-left:8px;">Run at your perfect pace.</span></a>
+      <div class="dl-card">
+        <div class="qr"></div>
+        <div>
+          <div class="t">Download the app</div>
+          <div class="s">Scan the QR code to get Pace<br>from the App Store.</div>
+        </div>
+      </div>
+    </div>
+    <div class="copy-row">
+      <span>&copy; 2026 Pace. All rights reserved.</span>
+      <span><a href="#features">Features</a> &nbsp;&middot;&nbsp; <a href="#reviews">Reviews</a> &nbsp;&middot;&nbsp; <a href="#pricing">Pricing</a> &nbsp;&middot;&nbsp; <a href="#faq">FAQs</a></span>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
