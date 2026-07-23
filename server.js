@@ -10,7 +10,7 @@ import { startResearchJob } from './src/research.js';
 import { runFastTurn } from './src/fast-brain.js';
 import { warmBrowser } from './src/browser-tools.js';
 import { DELIVERABLES_ROOT } from './src/deliverables.js';
-import { requireAuth, authRequired } from './src/auth.js';
+import { requireAuth, authRequired, verifyToken } from './src/auth.js';
 import { isApplicant } from './src/entitlements.js';
 import fsp from 'node:fs/promises';
 
@@ -34,6 +34,11 @@ if (!ANAM_API_KEY) console.warn('[warn] ANAM_API_KEY is not set — /api/session
 if (!ANTHROPIC_API_KEY) console.warn('[warn] ANTHROPIC_API_KEY is not set — the brain will fail.');
 
 const app = express();
+app.use((_req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  next();
+});
 app.use(express.json({ limit: '10mb' })); // screen frames ride in the body
 app.use(express.static(path.join(__dirname, 'public'), {
   etag: false,
@@ -115,7 +120,12 @@ app.post('/api/session-token', requireAuth, async (_req, res) => {
  * PUSH CHANNEL — server-sent events, one stream per operator.
  * Background jobs (deep research) announce results through this.
  * ------------------------------------------------------------------ */
-app.get('/api/events', (req, res) => {
+app.get('/api/events', async (req, res) => {
+  // EventSource can't send an Authorization header, so the token rides as a
+  // query param. Verified at open; the client reopens with a fresh token on
+  // error, so short-lived Clerk JWTs still work across reconnects.
+  const userId = await verifyToken(String(req.query.token || ''));
+  if (authRequired && !userId) return res.status(401).end();
   const session = getSession(req.query.conversationId);
   console.log(`[events] push channel OPEN for ${session.id}`);
   res.setHeader('Content-Type', 'text/event-stream');
@@ -132,7 +142,7 @@ app.get('/api/events', (req, res) => {
 /* Demo trigger: start a research job without voice (rehearsal/filming).
  * Hard-disabled in demo mode — it spins up the full Opus researcher and a
  * browser, which is not part of the public demo surface. */
-app.post('/api/demo/research', (req, res) => {
+app.post('/api/demo/research', requireAuth, (req, res) => {
   if ((process.env.DEMO_MODE ?? '1') !== '0') {
     return res.status(403).json({ error: 'disabled in demo mode' });
   }

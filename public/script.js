@@ -80,9 +80,18 @@ function appendAnnouncement(text) {
   if (chatHistory) chatHistory.scrollTop = chatHistory.scrollHeight;
 }
 
-function subscribeEvents() {
+async function subscribeEvents() {
   if (eventSource) eventSource.close();
-  eventSource = new EventSource(`/api/events?conversationId=${conversationId}`);
+  // The token rides in the URL because EventSource can't send headers. Clerk
+  // JWTs are short-lived, so on any drop we reopen with a fresh token instead
+  // of letting EventSource auto-reconnect with the stale one.
+  let token = '';
+  try { token = (await (await clerkReady()).session?.getToken()) || ''; } catch { /* REQUIRE_AUTH=0 dev */ }
+  eventSource = new EventSource(`/api/events?conversationId=${conversationId}&token=${encodeURIComponent(token)}`);
+  eventSource.onerror = () => {
+    eventSource.close();
+    setTimeout(subscribeEvents, 3000);
+  };
   eventSource.onmessage = (e) => {
     try {
       const ev = JSON.parse(e.data);

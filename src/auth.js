@@ -12,10 +12,10 @@ const JWKS = createRemoteJWKSet(new URL(`${ISSUER}/.well-known/jwks.json`));
 
 export const authRequired = REQUIRED;
 
-// Returns the Clerk user id, or null if the token is missing/invalid.
-export async function verifyBearer(req) {
-  const auth = req.headers.authorization ?? '';
-  const token = auth.startsWith('Bearer ') ? auth.slice(7) : null;
+// Returns the Clerk user id for a raw JWT, or null if missing/invalid.
+// Exists apart from verifyBearer because EventSource can't set headers, so
+// the SSE endpoint receives its token as a query param instead.
+export async function verifyToken(token) {
   if (!token) return null;
   try {
     const { payload } = await jwtVerify(token, JWKS, { issuer: ISSUER });
@@ -23,6 +23,12 @@ export async function verifyBearer(req) {
   } catch {
     return null;
   }
+}
+
+// Returns the Clerk user id, or null if the token is missing/invalid.
+export async function verifyBearer(req) {
+  const auth = req.headers.authorization ?? '';
+  return verifyToken(auth.startsWith('Bearer ') ? auth.slice(7) : null);
 }
 
 // Express middleware for the endpoints that cost money (Anam minutes, model

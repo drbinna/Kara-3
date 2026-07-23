@@ -6,3 +6,5 @@ transcripts/
 .DS_Store
 applicants.txt
 trial/data/
+__pycache__/
+*.pyc
