@@ -70,6 +70,6 @@ rebuilt for any future persona without reverse-engineering the assets.
 
 5. **Ship** — save as `public/<persona>-beam-loop.mp4`, commit, push, then pin
    the jsDelivr URL to the new commit SHA in the persona's page
-   (`https://cdn.jsdelivr.net/gh/drbinna/Kara-3@<sha>/public/<file>`), then
+   (`https://cdn.jsdelivr.net/gh/usegoblin-xyz/Kara-3@<sha>/public/<file>`), then
    redeploy. jsDelivr refuses files >20 MB — keep loops under that (Kara's is
    5.7 MB at 1080p24 / 20 s).
