@@ -128,23 +128,25 @@ per request, brand name included:
 
 Reactions ("wow", "I love it") get conversation, never a re-serve.
 
-## Deployment (Modal)
+## Deployment (Fly)
 
-The live instance runs on [Modal](https://modal.com) as a single always-warm
-container (`modal_app.py`) — Kara keeps sessions, delivery guards, and
-published files in one process, so she scales vertically, not horizontally.
-Load-tested at 50 concurrent conversations on 2 CPU / 2 GB with flat memory.
+The live instance runs on [Fly.io](https://fly.io) (app `kara-3`, region iad)
+as a single always-warm machine at https://kara.usegoblin.xyz — Kara keeps
+sessions, delivery guards, and published files in one process, so she scales
+vertically, not horizontally. Never let Fly create a second machine.
+Load-tested at 50 concurrent conversations with flat memory.
 
 ```bash
-modal secret create kara-keys --from-dotenv .env   # once
-modal deploy modal_app.py                          # → https://<workspace>--kara-3-kara.modal.run
+fly secrets set $(cat .env | xargs)   # once, or per-secret via fly secrets set
+fly deploy --ha=false                 # → https://kara.usegoblin.xyz
 ```
 
 Deploys run in demo mode (`DEMO_MODE=1`) with the full-brain research endpoint
 gated off. Heavy static assets (hero video, logo) are served from jsDelivr's
 CDN pinned to a commit SHA in `public/index.html` — when those assets change,
 commit first, re-pin the URLs to the new SHA, then redeploy. Deliverables and
-transcripts live on the container's ephemeral disk and reset on redeploy.
+transcripts are symlinked onto the Fly volume `kara_data`, so they survive
+redeploys.
 
 ## Extra brain surface (full mode)
 
