@@ -1,18 +1,31 @@
 # Kara 3 — working notes for Claude
 
 Voice-driven design partner demo: Anam avatar + Claude brain that serves
-pre-built template pages on spoken request. Live at
-https://drbinna--kara-3-kara.modal.run (Modal, single always-warm container).
+pre-built template pages on spoken request. Live at https://kara-3.fly.dev
+(Fly, single always-warm machine — see Deploy).
 
-## Layout
+## Layout — arrangement is a HARD RULE
 
-- `server.js` — entry point (root; Modal runs `node server.js`)
+Related files stay grouped in their domain folder; no strays at the repo root.
+
+- `server.js` — entry point (root; the Dockerfile runs `node server.js`)
 - `src/` — active core: `fast-brain.js` (both brains + tools), `research.js`,
-  `browser-tools.js`, `data-store.js`, `deliverables.js`, `mcp-tools.js`, `sessions.js`
-- `legacy/` — retired Zendesk-era code; nothing imports it, don't wire it back without asking
+  `browser-tools.js`, `data-store.js`, `deliverables.js`, `mcp-tools.js`,
+  `sessions.js`, `auth.js`, `entitlements.js`, `projects.js`
 - `templates/` — the servable page catalog (see rules below)
 - `public/` — static front-end (no framework, vanilla JS)
+- `docs/` — ALL documentation `.md` lives here, session logs in
+  `docs/sessions/YYYY-MM-DD.md`. The only `.md` allowed elsewhere are
+  functional ones read in place: `CLAUDE.md` + `README.md` (root, by
+  convention), `workspace/*.md` (demo data the brain's read-only tools
+  serve), `trial/templates/*.md` (email templates `send.mjs` loads by path)
+- `extension/` — Kara Capture Chrome extension (pairs via `/api/capture`)
+- `workspace/` — the brain's read-only demo folder; `data/app.db` — demo DB
+- `trial/` — work-trial outreach tooling (applicant CSVs gitignored)
 - `deliverables/`, `transcripts/` — runtime output, gitignored
+- Retired code is deleted, not parked: recover from git history
+  (`legacy/` and `modal_app.py` were removed 2026-07-23; the old Zendesk-era
+  code lives before commit e79b24f — don't wire it back without asking)
 
 ## Run & verify
 
