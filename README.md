@@ -1,6 +1,6 @@
 # Kara 3 — Voice-Driven Design Partner
 
-**Live demo: [kara-3.fly.dev](https://kara-3.fly.dev)** —
+**Live demo: [kara.usegoblin.xyz](https://kara.usegoblin.xyz)** —
 press *Start conversation*, allow the mic, and ask her for a website.
 
 A real-time voice demo: an [Anam](https://anam.ai) avatar with a Claude brain
