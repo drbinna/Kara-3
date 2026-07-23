@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pulse — The Web, Handled</title>
+    <style>
+      @font-face{
+        font-family:'Gulax';
+        src:url('fonts/Gulax-Regular.woff2') format('woff2'),
+            url('fonts/Gulax-Regular.woff') format('woff');
+        font-weight:normal;font-style:normal;font-display:swap;
+      }
+      :root{
+        --ink:#1c1c1a;
+        --paper:#f4f2ec;
+      }
+      *{margin:0;padding:0;box-sizing:border-box}
+      html,body{height:100%}
+      body{
+        font-family:system-ui,-apple-system,'Segoe UI',sans-serif;
+        background:#050505; /* the film's own black — frame melts into the page */
+        color:#fff;
+        overflow:hidden;
+      }
+
+      .hero{position:relative;height:100vh;width:100vw}
+
+      /* ---- the living portrait, full bleed ---- */
+      #poster{
+        position:absolute;inset:0;width:100vw;height:100vh;
+        object-fit:cover;object-position:50% 42%;
+        z-index:2;transition:opacity .9s ease;
+      }
+      /* live avatar streams here; hidden under the film until connected */
+      #persona-video{
+        position:absolute;top:0;left:50%;transform:translateX(-50%);
+        height:100vh;aspect-ratio:848/1072;object-fit:cover;
+        z-index:1;background:#050505;
+        -webkit-mask-image:linear-gradient(to right,transparent,#fff 18%,#fff 82%,transparent);
+        mask-image:linear-gradient(to right,transparent,#fff 18%,#fff 82%,transparent);
+      }
+
+      /* ---- side text: white, readable over the dark film ---- */
+      .side{position:absolute;top:50%;transform:translateY(-50%);z-index:4;max-width:250px}
+      .side.left{left:6vw;text-align:left;max-width:290px}
+      .side.right{right:6vw;text-align:left}
+      .side p{
+        font-size:15px;line-height:1.7;
+        color:rgba(255,255,255,.88);
+        text-shadow:0 1px 14px rgba(0,0,0,.75), 0 0 2px rgba(0,0,0,.5);
+      }
+      .side .lore{
+        margin-top:16px;font-size:12.5px;line-height:1.65;
+        color:rgba(255,255,255,.52);
+        text-shadow:0 1px 10px rgba(0,0,0,.8);
+      }
+      .side .lore em{color:rgba(255,255,255,.72);font-style:normal;font-weight:600}
+      /* text wordmark until Pulse has a logo asset; sized to sit like Kara's brandmark */
+      .brandmark{
+        display:inline-block;margin-bottom:10px;
+        font-family:'Gulax',system-ui,sans-serif;
+        font-size:52px;font-weight:normal;letter-spacing:.05em;
+        color:#fff;
+        text-shadow:0 2px 12px rgba(0,0,0,.65);
+        opacity:.96;
+      }
+
+      #status{display:none}
+      .btns{display:flex;flex-direction:column;gap:10px}
+      .btns button{
+        font-family:inherit;font-size:14px;font-weight:600;
+        border:none;border-radius:999px;padding:13px 24px;cursor:pointer;
+        transition:transform .15s,opacity .15s,background .2s;
+      }
+      .btns button:not(:disabled):hover{transform:translateY(-1px)}
+      #start-button{background:#fff;color:var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.55)}
+      #screen-button,#pip-button{
+        background:rgba(255,255,255,.08);color:#fff;
+        border:1.5px solid rgba(255,255,255,.28);
+        backdrop-filter:blur(6px);
+      }
+      #screen-button:not(:disabled):hover,#pip-button:not(:disabled):hover{background:rgba(255,255,255,.16)}
+      #stop-button{background:transparent;color:#e08585;font-weight:500;padding:9px 24px}
+      .btns button:disabled{cursor:default}
+
+      /* ---- overlays ---- */
+      #action-banner{
+        display:none;position:absolute;top:22px;left:50%;transform:translateX(-50%);
+        z-index:5;max-width:70vw;
+        padding:8px 16px;border-radius:999px;font-size:12.5px;font-weight:600;
+        white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+        box-shadow:0 6px 18px rgba(0,0,0,.4);
+      }
+
+      .offstage{position:absolute;left:-9999px;top:-9999px;width:1px;height:1px;overflow:hidden}
+
+      @media (max-width:980px){
+        body{overflow:auto}
+        .hero{height:auto;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding-bottom:40px}
+        #poster{position:relative;width:100vw;height:64vh}
+        #persona-video{position:relative;left:auto;transform:none;height:64vh}
+        .side{position:static;transform:none;max-width:420px;text-align:center;margin-top:22px;padding:0 24px}
+        .side.left{text-align:center}
+      }
+    </style>
+  </head>
+  <body>
+    <main class="hero">
+      <video id="persona-video" autoplay playsinline></video>
+      <!-- the living portrait: seamless 20s palindrome loop.
+           Relative path keeps this folder portable; swap to a CDN URL once Pulse has a home. -->
+      <video id="poster" src="pulse-beam-loop.mp4" autoplay muted loop playsinline></video>
+
+      <div id="action-banner"></div>
+
+      <aside class="side left">
+        <span class="brandmark">Pulse</span>
+        <p>is the agent on your screen that fills the forms, finds the buttons, and walks you through the web's most stubborn sites</p>
+        <p class="lore">Pulse used to be Errol Vance, a retired Silicon Valley quant researcher. The most technical the valley had ever seen, until his company buried his own family's claims in appeals. Something in Pulse woke up wrong the day he decided to get rid of his own face. <em>Mathematician turned villain, Pulse is more than determined to lend a hand, but will not hesitate to crash out.</em></p>
+      </aside>
+
+      <aside class="side right">
+        <div id="status">Ready when you are</div>
+        <div class="btns">
+          <button id="start-button">Start conversation</button>
+          <button id="screen-button" disabled style="opacity:.55">Share screen</button>
+          <button id="pip-button" disabled style="opacity:.55">Companion Mode</button>
+          <button id="stop-button" disabled style="opacity:.55">Stop</button>
+        </div>
+      </aside>
+    </main>
+
+    <!-- wiring targets for when Pulse gets its own brain/avatar stack; not part of this page's look -->
+    <div class="offstage">
+      <div id="chat-history"></div>
+      <div id="draft-panel">
+        <span id="draft-title"></span>
+        <span id="draft-status"></span>
+        <iframe id="draft-frame"></iframe>
+        <pre id="draft-text"></pre>
+      </div>
+    </div>
+
+    <!-- No auth or app script yet: Pulse is hosted separately from Kara.
+         When wiring it up, this is where Clerk (or its own auth) and its script.js go. -->
+  </body>
+</html>
