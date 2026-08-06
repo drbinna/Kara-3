@@ -729,8 +729,14 @@ async function startConversation() {
       updateStatus('Sign in, then press Start again', 'loading');
       return;
     }
-    if (!response.ok) throw new Error('failed to get session token');
+    if (!response.ok) {
+      const body = await response.json().catch(() => ({}));
+      throw new Error(body.error === 'anam_session_failed'
+        ? `avatar session failed (Anam ${body.anamStatus}: ${body.detail}) — check ANAM_API_KEY on the server`
+        : 'failed to get session token');
+    }
     const { sessionToken } = await response.json();
+    if (!sessionToken) throw new Error('empty session token from server');
 
     registerCapturePairing(); // pair the Kara Capture extension to this session
 

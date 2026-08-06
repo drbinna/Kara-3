@@ -108,7 +108,17 @@ app.post('/api/session-token', requireAuth, async (_req, res) => {
         },
       }),
     });
-    const data = await r.json();
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok || !data.sessionToken) {
+      // Never return 200 without a token — that made Anam failures invisible
+      // (client dialed with undefined and hung). Say what Anam actually said.
+      console.error('[anam] session-token failed:', r.status, JSON.stringify(data).slice(0, 300));
+      return res.status(502).json({
+        error: 'anam_session_failed',
+        anamStatus: r.status,
+        detail: data?.message || data?.error || 'no sessionToken in Anam response',
+      });
+    }
     res.json({ sessionToken: data.sessionToken });
   } catch (err) {
     console.error('session-token error:', err);
