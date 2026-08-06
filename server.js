@@ -130,6 +130,11 @@ app.post('/api/session-token', requireAuth, async (_req, res) => {
  * PUSH CHANNEL — server-sent events, one stream per operator.
  * Background jobs (deep research) announce results through this.
  * ------------------------------------------------------------------ */
+/* Client bootstrap: tells the page whether sign-in is required, so
+ * REQUIRE_AUTH=0 is a true end-to-end kill switch (the client previously
+ * gated Start on Clerk regardless of the server setting). */
+app.get('/api/config', (_req, res) => res.json({ authRequired }));
+
 app.get('/api/events', async (req, res) => {
   // EventSource can't send an Authorization header, so the token rides as a
   // query param. Verified at open; the client reopens with a fresh token on

@@ -541,6 +541,14 @@ function renderHistory(messages) {
  * clerk.browser.js is loaded async from index.html; wait for the global,
  * initialize once, and hand out Bearer headers for the paid endpoints.
  * getToken() caches and auto-refreshes, so calling it per turn is cheap. ---- */
+// Whether the server requires sign-in (REQUIRE_AUTH). Fetched once; defaults
+// to true so a failed fetch never accidentally opens the gate.
+let serverAuthRequired = true;
+const authConfigReady = fetch('/api/config')
+  .then((r) => r.json())
+  .then((c) => { serverAuthRequired = c.authRequired !== false; })
+  .catch(() => {});
+
 let clerkLoading = null;
 function clerkReady() {
   if (clerkLoading) return clerkLoading;
@@ -591,6 +599,8 @@ function clerkReady() {
 
 async function authHeaders() {
   try {
+    await authConfigReady;
+    if (!serverAuthRequired) return {};
     const clerk = await clerkReady();
     const token = await clerk.session?.getToken();
     return token ? { Authorization: `Bearer ${token}` } : {};
@@ -696,8 +706,10 @@ async function startConversation() {
 
     // Signed out? Open Clerk's modal instead of dialing. After signing in the
     // visitor clicks Start again — no auto-dial, no surprise mic prompt.
-    const clerk = await clerkReady().catch(() => null);
-    if (clerk && !clerk.user) {
+    // (Skipped entirely when the server runs with REQUIRE_AUTH=0.)
+    await authConfigReady;
+    const clerk = serverAuthRequired ? await clerkReady().catch(() => null) : null;
+    if (serverAuthRequired && clerk && !clerk.user) {
       // Force the OAuth round-trip to land back HERE — without this, Clerk
       // falls back to the instance home URL (usegoblin.xyz) after Google.
       clerk.openSignIn({
