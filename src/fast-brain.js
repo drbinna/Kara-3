@@ -383,7 +383,19 @@ export function extractDraft(partialJson) {
 /* ------------------------- streamed API call ----------------------------- */
 /* Calls /v1/messages with stream:true, speaks text deltas via onText as they
  * arrive, and returns { contentBlocks, stopReason } for the tool loop. */
-export async function streamModelStep({ system, messages, onText, onDraft, model = MODEL, toolChoice, signal, tools }) {
+const PROVIDER = (process.env.MODEL_PROVIDER || 'anthropic').toLowerCase();
+
+/* Dispatcher: every caller (turn loop, researcher, demo path) goes through
+ * here; MODEL_PROVIDER=fireworks swaps the brain without touching them. */
+export async function streamModelStep(args) {
+  if (PROVIDER === 'fireworks') {
+    const { fireworksModelStep } = await import('./fireworks.js');
+    return fireworksModelStep(args);
+  }
+  return anthropicModelStep(args);
+}
+
+async function anthropicModelStep({ system, messages, onText, onDraft, model = MODEL, toolChoice, signal, tools }) {
   const res = await fetch(API_URL, {
     method: 'POST',
     signal,
