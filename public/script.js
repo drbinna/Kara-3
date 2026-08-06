@@ -545,7 +545,16 @@ let clerkLoading = null;
 function clerkReady() {
   if (clerkLoading) return clerkLoading;
   clerkLoading = (async () => {
-    while (!window.Clerk) await new Promise((r) => setTimeout(r, 50));
+    // A blocked clerk.browser.js (ad-blocker, network) must FAIL, not hang:
+    // this wait used to be infinite, which made the Start button appear dead.
+    const deadline = Date.now() + 8000;
+    while (!window.Clerk) {
+      if (Date.now() > deadline) {
+        clerkLoading = null; // allow a retry once the blocker is disabled
+        throw new Error('clerk_unavailable');
+      }
+      await new Promise((r) => setTimeout(r, 50));
+    }
     if (!window.Clerk.loaded) await window.Clerk.load({
       // Theme every Clerk surface (modal, loading states, spinner) to match
       // the page: near-black card, dashed hairline, warm text, green accent.
@@ -705,7 +714,14 @@ async function startConversation() {
       headers: await authHeaders(),
     });
     if (response.status === 401) {
-      clerk?.openSignIn({
+      if (!clerk) {
+        // Auth is required but the sign-in script never loaded — the honest
+        // message, not a sign-in prompt that can't appear.
+        startButton.disabled = false;
+        updateStatus('Sign-in couldn’t load — disable ad-blocker for this site, then retry', 'error');
+        return;
+      }
+      clerk.openSignIn({
         forceRedirectUrl: window.location.href,
         signUpForceRedirectUrl: window.location.href,
       });
