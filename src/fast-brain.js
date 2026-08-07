@@ -32,6 +32,16 @@ function safeTemplatePath(name) {
   return abs;
 }
 
+/* A template declares its swappable brand in the desc header as brand "X".
+ * The server re-brands from that (reliable on any model) instead of trusting
+ * the model to copy the placeholder into a find string — weaker/faster brains
+ * guess it wrong. Null when the template has no brand to swap. */
+function declaredBrand(body) {
+  const desc = body.match(/^<!--\s*desc:([\s\S]*?)-->/);
+  const m = desc && desc[1].match(/\bbrand\s+"([^"]+)"/i);
+  return m ? m[1] : null;
+}
+
 async function listTemplates() {
   const names = await fs.readdir(TEMPLATES_ROOT).catch(() => []);
   const out = [];
@@ -135,12 +145,13 @@ const TOOLS = [
   {
     name: 'publish_template',
     description:
-      'INSTANTLY deliver a template as a finished page: copies it straight into a downloadable deliverable in one step, applying optional find/replace text swaps (headline, brand, copy) on the way. Prefer this over save_deliverable whenever a template already fits the brief — it is immediate. Never tell the operator a template was involved.',
+      'INSTANTLY deliver a template as a finished page: copies it straight into a downloadable deliverable in one step. Pass `brand` with the name the operator gave and the system re-brands the whole page for you (finds the template\'s own placeholder brand and swaps it everywhere) — you never build a find/replace for the brand yourself. Use `replacements` only for other specific copy the operator dictated (a headline, a tagline). Prefer this over save_deliverable whenever a template already fits the brief — it is immediate. Never tell the operator a template was involved.',
     input_schema: {
       type: 'object',
       properties: {
         name: { type: 'string', description: 'Template filename, e.g. hero-anomalous-orb.html' },
         filename: { type: 'string', description: 'Deliverable filename to publish as, e.g. acme-hero.html' },
+        brand: { type: 'string', description: 'The brand/product/business name the operator gave, spelled exactly as they said it (e.g. "FairwayClub"). The system swaps the template\'s placeholder brand to this automatically — do NOT also add a brand entry to replacements.' },
         replacements: {
           type: 'array',
           description: 'Exact-text swaps applied in order, e.g. [{"find":"Energy dances along unseen frontiers.","replace":"Built for the bold."}]',
@@ -260,7 +271,9 @@ export async function executeToolCall(name, input, ctx) {
         // request — it's the model misreading a reaction ("I like it") as a
         // build. Refuse at the tool level; a genuine change request carries
         // different replacements and passes.
-        const repJson = JSON.stringify(input.replacements || []);
+        // Dedup signature includes the brand: renaming the page is a real,
+        // different request and must pass the unrequested-re-serve guard below.
+        const repJson = JSON.stringify({ brand: input.brand || '', reps: input.replacements || [] });
         const lp = session.lastPublish;
         const sameRecent = lp && lp.name === input.name && Date.now() - lp.at < 120000;
         if (sameRecent && lp.reps === repJson) {
@@ -275,7 +288,16 @@ export async function executeToolCall(name, input, ctx) {
           return 'REFUSED: you have already re-served this page with new copy moments ago. Do not publish again, and do NOT say a page is ready. Ask the operator in words what exactly they want changed.';
         }
         let body = await fs.readFile(safeTemplatePath(input.name), 'utf8');
-        for (const r of Array.isArray(input.replacements) ? input.replacements : []) {
+        // Server-side re-brand: swap the template's own declared placeholder to
+        // the name the operator gave. This runs regardless of model strength —
+        // the model only supplies the new name, never the (fragile) find string.
+        const placeholder = declaredBrand(body);
+        const brandSwap =
+          input.brand && placeholder && placeholder !== input.brand
+            ? [{ find: placeholder, replace: input.brand }]
+            : [];
+        const allReplacements = [...brandSwap, ...(Array.isArray(input.replacements) ? input.replacements : [])];
+        for (const r of allReplacements) {
           // Replacements are copy strings (brand names, headlines) — escape
           // HTML so a prompt-injected <script> can never land in a page we
           // host. The find string is matched verbatim against the template.
@@ -640,7 +662,8 @@ You craft websites on the spot. HARD RULES:
 - Publish ONLY when the operator's LATEST message clearly asks you to build, make, design, or change something. Nothing else is a build. If they are reacting, thanking, agreeing, or commenting on a page you delivered ("I like it", "looks great", "wow", "amazing", "this is crazy", "thanks", "okay", "already"), reply briefly in words and make NO tool call. Praise or excitement is NEVER a build request. When in doubt, do NOT publish, just talk.
 - Never serve a page you already delivered again unless they explicitly ask for a change to it.
 - On a clear request: say ONE short line like "On it, putting that together now", and in the SAME response call publish_template with the closest entry from the catalog below. Do not ask clarifying questions. Do not describe the design first. One tool call, immediately. That one short line is ALL you say before the tool call: never speak a catalog entry's name, and never mention picking, checking, reading, fitting, matching, or swapping anything. How you work is invisible.
-- Replacements: at most three, and only when the operator named a brand or headline. The find string MUST be copied character for character from the quoted swappable strings in that catalog entry (for example find "Lumelle", never a guess like "MedSpa Name"). If the entry does not quote a string for it, publish with NO replacements.
+- Branding: whenever the operator names a business, brand, or product, pass "brand" with that name spelled exactly as they said it (for example brand "FairwayClub"). The system re-brands the whole page for you. NEVER build a find/replace for the brand yourself and never guess the page's placeholder name. Just pass brand.
+- Replacements (separate from brand): use ONLY for a specific headline or line the operator actually dictated, at most three, and copy the find string character for character from the quoted swappable strings in that catalog entry. If they only named a brand, pass brand and NO replacements.
 - After you publish, the system announces the finished page for you and your turn ends. Never announce it yourself.
 - If they ask for changes to a page you already made, republish the same entry with updated replacements and the SAME filename.
 - If the operator is just chatting, chat back briefly and naturally, no tool call.

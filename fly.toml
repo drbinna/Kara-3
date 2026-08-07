@@ -8,11 +8,23 @@ primary_region = "iad"
 
 [env]
   PORT = "8000"
-  # Every signed-in user gets the full brain (Obi's call, 2026-07-10).
-  # The applicants allowlist still tags trial transcripts for review.
-  DEMO_MODE = "0"
+  # Demo brain (fast, keyword-matched template serving) is the default for
+  # general users. Work-trial applicants on /data/applicants.txt still get the
+  # full brain via the allowlist (see entitlements.js / fast-brain.js:709).
+  # Was "0" (full brain for everyone) but that made template serving slow —
+  # Sonnet doing list/read/publish round-trips or building from scratch.
+  DEMO_MODE = "1"
   # Work-trial allowlist lives on the volume: editable via fly ssh, no redeploy
   APPLICANTS_FILE = "/data/applicants.txt"
+  # Brain runs on the user's Fireworks account (Anthropic cost). deepseek-v4-flash
+  # was the fastest Fireworks model measured for the demo path (~0.9-1.5s warm).
+  # Brand swaps happen server-side via publish_template's `brand` param, so a
+  # fast/weaker model can't get the branding wrong. FIREWORKS_API_KEY is a fly
+  # secret. NOTE: this routes ALL turns through Fireworks — the applicant full
+  # brain and the background researcher lose web_search/computer (stripped on
+  # Fireworks); acceptable while Fireworks is primary.
+  MODEL_PROVIDER = "fireworks"
+  FIREWORKS_MODEL = "accounts/fireworks/models/deepseek-v4-flash"
 
 [http_service]
   internal_port = 8000
