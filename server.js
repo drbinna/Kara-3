@@ -5,11 +5,11 @@ import { fileURLToPath } from 'node:url';
 import { query } from '@anthropic-ai/claude-agent-sdk';
 import { dataServer, DATA_TOOL_NAMES } from './src/mcp-tools.js';
 import { getSession } from './src/sessions.js';
-import { listProjects } from './src/projects.js';
+import { listProjects, deleteProject } from './src/projects.js';
 import { startResearchJob } from './src/research.js';
 import { runFastTurn } from './src/fast-brain.js';
 import { warmBrowser } from './src/browser-tools.js';
-import { DELIVERABLES_ROOT } from './src/deliverables.js';
+import { DELIVERABLES_ROOT, deleteDeliverableByUrl } from './src/deliverables.js';
 import { requireAuth, authRequired, verifyToken } from './src/auth.js';
 import { isApplicant } from './src/entitlements.js';
 import fsp from 'node:fs/promises';
@@ -186,6 +186,20 @@ app.get('/api/deliverables', async (req, res) => {
 app.get('/api/projects', requireAuth, async (req, res) => {
   const uid = req.userId || (authRequired ? null : 'dev');
   res.json({ projects: await listProjects(uid) });
+});
+
+/* Let a user delete one of their past builds. Removes the index entry AND the
+ * published page file (their choice). Scoped to their own userId, so they can
+ * only ever delete a project sitting in their own history. */
+app.delete('/api/projects', requireAuth, async (req, res) => {
+  const uid = req.userId || (authRequired ? null : 'dev');
+  const url = req.body?.url;
+  if (!uid) return res.status(401).json({ error: 'sign_in_required' });
+  if (!url) return res.status(400).json({ error: 'missing_url' });
+  const removed = await deleteProject(uid, url);
+  if (!removed) return res.status(404).json({ error: 'not_found' });
+  await deleteDeliverableByUrl(removed.url); // best-effort; entry is already gone
+  res.json({ ok: true });
 });
 
 /* ------------------------------------------------------------------ *

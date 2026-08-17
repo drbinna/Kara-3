@@ -34,3 +34,20 @@ export async function saveDeliverable(sessionId, filename, content) {
   await fs.writeFile(path.join(dir, name), body, 'utf8');
   return { name, url: `/deliverables/${path.basename(dir)}/${name}` };
 }
+
+/* Delete a published file given its public url (/deliverables/<id>/<file>).
+ * Guards against path traversal — only unlinks inside DELIVERABLES_ROOT — and
+ * removes the now-empty session folder. Returns true if a file was removed. */
+export async function deleteDeliverableByUrl(url) {
+  const m = String(url || '').match(/^\/deliverables\/(.+)$/);
+  if (!m) return false;
+  const abs = path.resolve(DELIVERABLES_ROOT, m[1]);
+  if (abs !== DELIVERABLES_ROOT && !abs.startsWith(DELIVERABLES_ROOT + path.sep)) return false;
+  try {
+    await fs.unlink(abs);
+    await fs.rmdir(path.dirname(abs)).catch(() => {}); // tidy up if the folder is now empty
+    return true;
+  } catch {
+    return false; // already gone or never existed
+  }
+}

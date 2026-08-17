@@ -21,6 +21,7 @@ COPY . .
 ENV NODE_ENV=production PORT=8000
 EXPOSE 8000
 
-# transcripts/ and deliverables/ live on the Fly volume so applicant review
-# trails survive redeploys; the app writes to repo-root paths, so symlink.
-CMD ["sh", "-c", "mkdir -p /data/transcripts /data/deliverables && ln -sfn /data/transcripts /app/transcripts && ln -sfn /data/deliverables /app/deliverables && node server.js"]
+# transcripts/, deliverables/ and projects/ live on the Fly volume so applicant
+# review trails and per-user build history survive redeploys; the app writes to
+# repo-root paths, so symlink.
+CMD ["sh", "-c", "mkdir -p /data/transcripts /data/deliverables /data/projects && ln -sfn /data/transcripts /app/transcripts && ln -sfn /data/deliverables /app/deliverables && ln -sfn /data/projects /app/projects && node server.js"]

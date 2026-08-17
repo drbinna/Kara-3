@@ -281,6 +281,13 @@ const FOIL_CSS = `
 .fb-row svg{width:13px;height:13px;flex:none;opacity:.6;transition:opacity .12s,transform .15s}
 .fb-row:hover svg{opacity:1;transform:translate(1px,-1px)}
 .fb-empty{padding:8px;font-size:12px;font-style:italic;color:#8a8984;animation:fbIn .22s ease both}
+/* past-build row = link + inline delete; the <a> flexes, the × sits at the end */
+.fb-past-row{display:flex;align-items:center;gap:2px;animation:fbIn .22s ease both}
+.fb-past-row>.fb-row{flex:1 1 auto;min-width:0}
+.fb-del{border:none;background:transparent;border-radius:6px;width:24px;height:24px;flex:none;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#8a8984;padding:0;transition:background .12s,color .12s}
+.fb-del:hover{background:rgba(200,30,30,.12);color:#c81e1e}
+.fb-del:disabled{opacity:.4;cursor:default}
+.fb-del svg{width:13px;height:13px}
 @keyframes fbIn{from{transform:translateY(-10px);opacity:0}to{transform:none;opacity:1}}`;
 
 function makeFoil(doc, win, contentEl, surfaceCss, autoHeight) {
@@ -436,14 +443,41 @@ const filesWidget = (() => {
       // Don't repeat files already sitting in this session's list.
       const current = new Set(files.map((f) => f.url));
       const past = (items || []).filter((p) => !current.has(p.url));
-      const show = past.length ? '' : 'none';
-      pastHr.style.display = pastLabel.style.display = show;
+      const syncHeader = () => {
+        const any = pastList.childElementCount > 0;
+        pastHr.style.display = pastLabel.style.display = any ? '' : 'none';
+      };
       pastList.replaceChildren(...past.map((p, i) => {
+        const row = document.createElement('div');
+        row.className = 'fb-past-row';
         const a = linkEl(document, p, i);
         if (p.savedAt) a.title = `Built ${new Date(p.savedAt).toLocaleDateString()}`;
         a.style.opacity = '.75';
-        return a;
+        const del = document.createElement('button');
+        del.className = 'fb-del';
+        del.setAttribute('aria-label', `Delete ${p.name}`);
+        del.title = 'Delete this build';
+        del.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13"/></svg>';
+        del.addEventListener('click', async () => {
+          if (!confirm(`Delete "${p.name}"? This removes the page for good.`)) return;
+          del.disabled = true;
+          try {
+            const r = await fetch('/api/projects', {
+              method: 'DELETE',
+              headers: { 'Content-Type': 'application/json', ...(await authHeaders()) },
+              body: JSON.stringify({ url: p.url }),
+            });
+            if (!r.ok) throw new Error(String(r.status));
+            row.remove();
+            syncHeader();
+          } catch {
+            del.disabled = false; // let them try again
+          }
+        });
+        row.append(a, del);
+        return row;
       }));
+      syncHeader();
     },
     mirrorInto(el) { remote = el; render(); },
     unmirror() { remote = null; },
