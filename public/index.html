@@ -93,8 +93,16 @@
     <main class="hero">
       <video id="persona-video" autoplay playsinline></video>
       <!-- the living portrait: seamless 20s palindrome loop -->
-      <!-- big assets ride jsDelivr's edge CDN (pinned commit = immutable cache), not the app container -->
-      <video id="poster" src="https://cdn.jsdelivr.net/gh/usegoblin-xyz/Kara-3@bf07205481c98609aaef27111d2c87d701b555f5/public/kara-beam-loop.mp4" autoplay muted loop playsinline></video>
+      <!-- Served from Cloudinary with per-browser codec negotiation (source order = best first):
+           VP9 966KB (Chrome/FF/Edge/modern Safari) -> H.265 1.6MB (older Safari/iOS) -> H.264 3MB (fallback).
+           poster= is a 77KB still of frame 0 for instant paint while the loop buffers.
+           Cloudinary versions (v1786993166) are immutable; re-upload bumps the version, not a git SHA. -->
+      <video id="poster" autoplay muted loop playsinline
+             poster="https://res.cloudinary.com/dbd6v9ove/video/upload/so_0,f_auto,q_auto/v1786993166/kara/kara-beam-loop.jpg">
+        <source src="https://res.cloudinary.com/dbd6v9ove/video/upload/f_webm,vc_vp9,q_auto/v1786993166/kara/kara-beam-loop.webm" type="video/webm">
+        <source src="https://res.cloudinary.com/dbd6v9ove/video/upload/vc_h265,q_auto/v1786993166/kara/kara-beam-loop.mp4" type='video/mp4; codecs=hvc1'>
+        <source src="https://res.cloudinary.com/dbd6v9ove/video/upload/q_auto/v1786993166/kara/kara-beam-loop.mp4" type="video/mp4">
+      </video>
 
       <div id="action-banner"></div>
 
