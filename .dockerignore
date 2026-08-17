@@ -2,6 +2,7 @@
 node_modules
 transcripts
 deliverables
+projects
 __pycache__
 legacy
 modal_app.py
