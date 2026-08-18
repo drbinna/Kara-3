@@ -14,6 +14,10 @@ primary_region = "iad"
   # Was "0" (full brain for everyone) but that made template serving slow —
   # Sonnet doing list/read/publish round-trips or building from scratch.
   DEMO_MODE = "1"
+  # FORCE_DEMO=1 pins ALL signed-in users to the fast demo lane, overriding the
+  # applicant allowlist (a tracked switch, so it can't drift like an edited
+  # /data/applicants.txt). Flip to "0" to let the allowlist grant the full brain.
+  FORCE_DEMO = "1"
   # Work-trial allowlist lives on the volume: editable via fly ssh, no redeploy
   APPLICANTS_FILE = "/data/applicants.txt"
   # Brain runs on the user's Fireworks account (no Anthropic cost). Kimi K3 is

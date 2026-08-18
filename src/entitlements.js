@@ -16,7 +16,14 @@ const APPLICANTS_FILE = process.env.APPLICANTS_FILE || 'applicants.txt';
 const CLERK_SECRET_KEY = process.env.CLERK_SECRET_KEY || '';
 const CLERK_API = 'https://api.clerk.com/v1';
 
-if (!CLERK_SECRET_KEY) {
+// Production guard: FORCE_DEMO=1 pins EVERY user to the fast demo lane, ignoring
+// the applicant allowlist entirely (a tracked switch that can't drift the way an
+// edited /data/applicants.txt can). Set in fly.toml [env].
+const FORCE_DEMO = (process.env.FORCE_DEMO ?? '0') === '1';
+
+if (FORCE_DEMO) {
+  console.log('[trial] FORCE_DEMO=1 — allowlist ignored, all users on the fast demo lane');
+} else if (!CLERK_SECRET_KEY) {
   console.warn('[trial] CLERK_SECRET_KEY not set — applicant allowlist disabled, all users get the demo brain');
 }
 
@@ -59,6 +66,7 @@ async function getUserEmails(userId) {
 
 /* Is this signed-in user a work-trial applicant? Fails closed (demo brain). */
 export async function isApplicant(userId) {
+  if (FORCE_DEMO) return false; // hard override: nobody gets the full brain
   if (!userId || !CLERK_SECRET_KEY) return false;
   try {
     const [list, emails] = await Promise.all([getAllowlist(), getUserEmails(userId)]);

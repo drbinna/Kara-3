@@ -648,6 +648,10 @@ SCREEN SHARING IS ON RIGHT NOW. The image with the operator's message is their l
  * browsing, no research, no from-scratch builds), and the delivery
  * announcement spoken deterministically by the server. */
 const DEMO_MODE = (process.env.DEMO_MODE ?? '1') !== '0';
+// FORCE_DEMO=1 pins every turn to the fast demo lane regardless of DEMO_MODE or
+// whether the user is an applicant — the authoritative can't-drift guard
+// (see entitlements.js, which also short-circuits the applicant check).
+const FORCE_DEMO = (process.env.FORCE_DEMO ?? '0') === '1';
 const DEMO_TOOLS = TOOLS.filter((t) => t.name === 'publish_template');
 // Demo turns are trivial (pick a catalog entry, speak one line) — Haiku's
 // time-to-first-token is roughly half of Sonnet's, and in a voice demo the
@@ -729,7 +733,7 @@ export async function runFastTurn({ messages, workspaceDir, session, screenFrame
   // Brain per TURN: work-trial applicants (fullBrain) get the real toolkit;
   // everyone else follows the global DEMO_MODE default. DEMO_MODE=0 still
   // force-enables the full brain for all users (local dev).
-  const demoTurn = fullBrain ? false : DEMO_MODE;
+  const demoTurn = FORCE_DEMO ? true : fullBrain ? false : DEMO_MODE;
 
   // Demo mode: the catalog rides inside the system prompt, so serving a page
   // is a single publish_template call — no list/read rounds, nothing to think.
